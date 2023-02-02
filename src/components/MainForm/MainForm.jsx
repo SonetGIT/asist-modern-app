@@ -694,7 +694,11 @@ export default (props) => {
               fieldValue[name] !== "" &&
               fieldValue[name] !== "NaN.NaN.NaN"
             ) {
-              attrs.attributes.push({ name: name, value: fieldValue[name] });
+              attrs.attributes.push({
+                name: name,
+                value: fieldValue[name],
+                type: Form.sections[s].contents[c].type,
+              });
             }
           }
         }
@@ -829,7 +833,23 @@ export default (props) => {
           selectedDoc: { value: JSON.stringify(fieldValue) },
         },
       };
-      console.log("filterClMonthDocList:", commandJson);
+      console.log("findDocument:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    } else if (name === "openPerson") {
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "openPerson" },
+          docId: { value: item.id },
+        },
+      };
+      console.log("openPerson:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
     } else if (name === "filterClMonthDocList") {
