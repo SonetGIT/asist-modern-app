@@ -518,12 +518,14 @@ export default () => {
       ) {
         sendFieldValues(commandJson);
         closeTab(tabId);
-      } else
-        handleOpenSwal(
-          "Вы действительно хотите закрыть вкладку?",
-          { yes: "Да", no: "Нет" },
-          tabId
-        );
+      } else {
+        handleCloseCurrentTabModal(tabId);
+        // handleOpenSwal(
+        //   "Вы действительно хотите закрыть вкладку?",
+        //   { yes: "Да", no: "Нет" },
+        //   tabId
+        // );
+      }
     }
   }
   // Custom allert component
@@ -1021,7 +1023,6 @@ export default () => {
                   sendFieldValues={sendFieldValues}
                   handleCloseCurrentTab={handleCloseCurrentTab}
                   clearTabData={clearTabData}
-                  // closeTab = {closeTab}
                   mailRest={mailRest}
                 ></MainComponent>
               </TabPanel>

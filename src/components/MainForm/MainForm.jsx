@@ -149,6 +149,88 @@ export default (props) => {
   const [gridTableId, setGridTableId] = useState(null);
   const [buttonFilesId, setbuttonFilesId] = useState(null);
 
+  // Set data from props to state of component
+  useEffect(() => {
+    console.log("MAINFORM PROPS", props);
+    setbuttonFilesId(getUUID());
+    if (props.userTask.docList !== "null" && props.userTask.docList !== null) {
+      let parsedData = JSON.parse(props.userTask.docList);
+      console.log("DOCL", parsedData);
+      setDocList(parsedData);
+      setSize(parseInt(props.userTask.size));
+      setPage(parseInt(props.userTask.page));
+      setTotalCount(parseInt(props.userTask.totalCount));
+      setGridTableId(getUUID());
+      // setFilteredDocList(parsedData)
+      // setInitialDocList(parsedData)
+      // filterDocList(0, parseInt(props.userTask.size)-1, parsedData)
+    }
+    if (
+      props.userTask.selectedDoc !== "null" &&
+      props.userTask.selectedDoc !== undefined &&
+      props.userTask.selectedDoc !== null
+    ) {
+      let parsedSelectedDoc = JSON.parse(props.userTask.selectedDoc);
+      let fields = {};
+
+      // for (let s = 0; s < Form.sections.length; s++) {
+      //   for (let c = 0; c < Form.sections[s].contents.length; c++) {
+      //     let fieldName = Form.sections[s].contents[c].name;
+      //     fields[fieldName] = parsedSelectedDoc[fieldName];
+      //   }
+      // }
+      for (let s = 0; s < parsedSelectedDoc.attributes.length; s++) {
+        let fieldName = parsedSelectedDoc.attributes[s].name;
+        fields[fieldName] = parsedSelectedDoc.attributes[s].value;
+      }
+      console.log("SDOC", parsedSelectedDoc);
+      console.log("FIELDVAL", fields);
+      setSelectedDoc(parsedSelectedDoc);
+      setFieldValue(fields);
+    }
+    if (
+      props.userTask.tableFormButtons !== "null" &&
+      props.userTask.tableFormButtons !== undefined &&
+      props.userTask.tableFormButtons !== null
+    ) {
+      setTableFormButtons(props.userTask.tableFormButtons);
+    }
+    if (
+      props.userTask.enumData !== null &&
+      props.userTask.enumData !== undefined &&
+      props.userTask.enumData !== "null"
+    ) {
+      let newEnumOptions = {};
+      for (let i = 0; i < props.userTask.enumData.length; i++) {
+        let options = [
+          {
+            value: "",
+            label: "Пусто",
+            name: props.userTask.enumData[i].name,
+          },
+        ];
+        for (let d = 0; d < props.userTask.enumData[i].data.length; d++) {
+          options.push({
+            value: props.userTask.enumData[i].data[d].id,
+            label: props.userTask.enumData[i].data[d].label,
+            name: props.userTask.enumData[i].name,
+          });
+        }
+        newEnumOptions[props.userTask.enumData[i].name] = options;
+      }
+      setEnumOptions(newEnumOptions);
+    }
+    if (
+      props.userTask.size !== undefined &&
+      props.userTask.size !== "null" &&
+      props.userTask.size !== null
+    ) {
+      setSize(parseInt(props.userTask.size));
+      setPage(parseInt(props.userTask.page));
+    }
+    setUpdateState(getUUID());
+  }, []);
+
   const LightTooltip = styled(({ className, ...props }: TooltipProps) => (
     <Tooltip {...props} classes={{ popper: className }} />
   ))(({ theme }) => ({
@@ -396,83 +478,7 @@ export default (props) => {
       fullDate + " " + hours + ":" + minutes + ":" + seconds + offsetInHours;
     return convertedDate;
   }
-  // Set data from props to state of component
-  useEffect(() => {
-    console.log("MAINFORM PROPS", props);
-    setbuttonFilesId(getUUID());
-    if (props.userTask.docList !== "null" && props.userTask.docList !== null) {
-      let parsedData = JSON.parse(props.userTask.docList);
-      console.log("DOCL", parsedData);
-      setDocList(parsedData);
-      setSize(parseInt(props.userTask.size));
-      setPage(parseInt(props.userTask.page));
-      setTotalCount(parseInt(props.userTask.totalCount));
-      setGridTableId(getUUID());
-      // setFilteredDocList(parsedData)
-      // setInitialDocList(parsedData)
-      // filterDocList(0, parseInt(props.userTask.size)-1, parsedData)
-    }
-    if (
-      props.userTask.selectedDoc !== "null" &&
-      props.userTask.selectedDoc !== undefined &&
-      props.userTask.selectedDoc !== null
-    ) {
-      let parsedSelectedDoc = JSON.parse(props.userTask.selectedDoc);
-      let fields = {};
-      // let Form = props.userTask.Form
-      for (let s = 0; s < Form.sections.length; s++) {
-        for (let c = 0; c < Form.sections[s].contents.length; c++) {
-          let fieldName = Form.sections[s].contents[c].name;
-          fields[fieldName] = parsedSelectedDoc[fieldName];
-        }
-      }
-      console.log("SDOC", parsedSelectedDoc);
-      // console.log("FIELDVAL", fields)
-      setSelectedDoc(parsedSelectedDoc);
-      setFieldValue(fields);
-    }
-    if (
-      props.userTask.tableFormButtons !== "null" &&
-      props.userTask.tableFormButtons !== undefined &&
-      props.userTask.tableFormButtons !== null
-    ) {
-      setTableFormButtons(props.userTask.tableFormButtons);
-    }
-    if (
-      props.userTask.enumData !== null &&
-      props.userTask.enumData !== undefined &&
-      props.userTask.enumData !== "null"
-    ) {
-      let newEnumOptions = {};
-      for (let i = 0; i < props.userTask.enumData.length; i++) {
-        let options = [
-          {
-            value: "",
-            label: "Пусто",
-            name: props.userTask.enumData[i].name,
-          },
-        ];
-        for (let d = 0; d < props.userTask.enumData[i].data.length; d++) {
-          options.push({
-            value: props.userTask.enumData[i].data[d].id,
-            label: props.userTask.enumData[i].data[d].label,
-            name: props.userTask.enumData[i].name,
-          });
-        }
-        newEnumOptions[props.userTask.enumData[i].name] = options;
-      }
-      setEnumOptions(newEnumOptions);
-    }
-    if (
-      props.userTask.size !== undefined &&
-      props.userTask.size !== "null" &&
-      props.userTask.size !== null
-    ) {
-      setSize(parseInt(props.userTask.size));
-      setPage(parseInt(props.userTask.page));
-    }
-    setUpdateState(getUUID());
-  }, []);
+
   // Functions from props
   function sendFieldValues(commandJson) {
     props.sendFieldValues(commandJson);
@@ -830,7 +836,7 @@ export default (props) => {
           searchBody: { value: JSON.stringify(filterDoc) },
           size: { value: size },
           page: { value: page },
-          selectedDoc: { value: JSON.stringify(fieldValue) },
+          selectedDoc: { value: JSON.stringify(filterDoc) },
         },
       };
       console.log("findDocument:", commandJson);
@@ -850,6 +856,22 @@ export default (props) => {
         },
       };
       console.log("openPerson:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    } else if (name === "select") {
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "select" },
+          docId: { value: item.id },
+        },
+      };
+      console.log("select:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
     } else if (name === "filterClMonthDocList") {
@@ -1397,7 +1419,6 @@ export default (props) => {
     if (contentItem.type === "Text") {
       return (
         <TextField
-          onBlur={handleChange}
           name={contentItem.name}
           style={{
             width: "100%",
@@ -1406,6 +1427,7 @@ export default (props) => {
           disabled={
             formType === "view" || contentItem.edit === false ? true : false
           }
+          onBlur={handleChange}
           defaultValue={
             fieldValue[contentItem.name] ? fieldValue[contentItem.name] : ""
           }
@@ -1420,7 +1442,7 @@ export default (props) => {
       if (fieldValue[contentItem.name] !== undefined) {
         for (let i = 0; i < enumOptions[contentItem.name].length; i++) {
           if (
-            parseInt(fieldValue[contentItem.name]) ===
+            fieldValue[contentItem.name] ===
             enumOptions[contentItem.name][i].value
           ) {
             selectedOption = enumOptions[contentItem.name][i];
@@ -1449,7 +1471,6 @@ export default (props) => {
     } else if (contentItem.type === "Bool") {
       return (
         <Checkbox
-          key={keyGen(5)}
           style={{
             maxWidth: 20,
             height: 10,
@@ -1606,7 +1627,7 @@ export default (props) => {
         <Grid>
           {/* Create main search table */}
           {Form !== null && Form !== "null" && (
-            <Grid container style={{ margin: "20px 0 17 0" }}>
+            <Grid container style={{ margin: "20px 0 17 0" }} key={updateState}>
               <Paper
                 style={{
                   borderRadius: 10,
@@ -1730,7 +1751,6 @@ export default (props) => {
                         return (
                           <td
                             colSpan={section.contents.length}
-                            key={keyGen(5)}
                             style={{
                               fontSize: 16,
                               color: crSnow,
@@ -1768,7 +1788,6 @@ export default (props) => {
                           return (
                             <td
                               rowSpan="2"
-                              key={keyGen(5)}
                               style={{
                                 color: crSnow,
                                 padding: 7,
@@ -1790,11 +1809,10 @@ export default (props) => {
                     <TableBody>
                       {Object.keys(docList).length !== 0 &&
                         docList.map((dataItem) => (
-                          <tr key={keyGen(5)} style={{ height: 35 }}>
+                          <tr style={{ height: 35 }}>
                             {gridFormButtons !== null &&
                               gridFormButtons.length > 0 && (
                                 <td
-                                  key={keyGen(5)}
                                   style={{
                                     maxWidth: 34,
                                     textAlign: "center",
@@ -1843,7 +1861,6 @@ export default (props) => {
                                   ) {
                                     return (
                                       <td
-                                        key={keyGen(5)}
                                         style={{
                                           fontSize: 12,
                                           color: crBlack,

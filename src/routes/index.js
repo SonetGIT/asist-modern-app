@@ -1,29 +1,31 @@
-import { mount, route, lazy, map, redirect } from 'navi';
-import React, { Suspense } from 'react';
-import { Router, View } from 'react-navi';
+import { mount, route, lazy, map, redirect } from "navi";
+import React, { Suspense } from "react";
+import { Router, View } from "react-navi";
 
-import { useKeycloak } from '../lib';
+import { useKeycloak } from "../lib";
 
-import HomePage from '../pages/Home';
+import HomePage from "../pages/Home";
 
-import { withAuthentication } from './utils';
+import { withAuthentication } from "./utils";
 
 // Define your routes
 const routes = mount({
-  '/home': withAuthentication(
+  "/home": withAuthentication(
     route({
-      title: 'Home',
+      title: "Home",
       view: <HomePage />,
-    }),
+    })
   ),
-  '/login': map(async (request, context) =>
+  "/login": map(async (request, context) =>
     context.isAuthenticated
       ? redirect(
-          request.params.redirectTo ? decodeURIComponent(request.params.redirectTo) : '/home',
+          request.params.redirectTo
+            ? decodeURIComponent(request.params.redirectTo)
+            : "/home"
         )
-      : lazy(() => import('../pages/Login')),
+      : lazy(() => import("../pages/Login"))
   ),
-  '/': redirect('/login'),
+  "/": redirect("/login"),
 });
 
 export const AppRouter = () => {
@@ -34,7 +36,10 @@ export const AppRouter = () => {
   }
 
   return (
-    <Router routes={routes} context={{ isAuthenticated: keycloak.authenticated }}>
+    <Router
+      routes={routes}
+      context={{ isAuthenticated: keycloak.authenticated }}
+    >
       <Suspense fallback={null}>
         <View />
       </Suspense>
