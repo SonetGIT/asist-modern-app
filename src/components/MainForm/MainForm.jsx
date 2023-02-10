@@ -322,7 +322,7 @@ export default (props) => {
     setFieldValue(fieldValue);
     console.log("FIELDVALUE", fieldValue);
   }
-  function handleSelectChange(option) {
+  async function handleSelectChange(option) {
     fieldValue[option.name] = option.value;
     console.log("OPT", option.name, option.value);
     var updateSelectedOptions = selectedOptions.slice();
@@ -341,114 +341,52 @@ export default (props) => {
       updateSelectedOptions.push(option);
       setSelectedOptions(updateSelectedOptions);
     }
-    if (
-      option.name === "payer_type" &&
-      taskType === "showPaymentsForCDServicesCreatingForm"
-    ) {
-      // console.log("SEL", option.name, option.value)
-      for (let s = 0; s < Form.sections.length; s++) {
-        for (let c = 0; c < Form.sections[s].contents.length; c++) {
-          if (Form.sections[s].contents[c].name === "depositor") {
-            if (option.value === 1) {
-              Form.sections[s].contents[c].show = true;
-              Form.sections[s].contents[c].edit = true;
-              fieldValue["issuer"] = null;
-              for (let i = 0; i < updateSelectedOptions.length; i++) {
-                if (updateSelectedOptions[i].name === "issuer") {
-                  updateSelectedOptions[i] = {
-                    value: "",
-                    label: "Пусто",
-                    name: "issuer",
-                  };
-                  setSelectedOptions(updateSelectedOptions);
-                  break;
-                }
-              }
-            } else {
-              Form.sections[s].contents[c].show = false;
-              Form.sections[s].contents[c].edit = false;
-            }
-          }
-          if (Form.sections[s].contents[c].name === "issuer") {
-            if (option.value === 2) {
-              Form.sections[s].contents[c].show = true;
-              Form.sections[s].contents[c].edit = true;
-              fieldValue["depositor"] = null;
-              for (let i = 0; i < updateSelectedOptions.length; i++) {
-                if (updateSelectedOptions[i].name === "depositor") {
-                  updateSelectedOptions[i] = {
-                    value: "",
-                    label: "Пусто",
-                    name: "depositor",
-                  };
-                  setSelectedOptions(updateSelectedOptions);
-                  break;
-                }
-              }
-            } else {
-              Form.sections[s].contents[c].show = false;
-              Form.sections[s].contents[c].edit = false;
-            }
-          }
+    if (option.name === "DjamoatId") {
+      // Clear Village Option
+      for (let i = 0; i < updateSelectedOptions.length; i++) {
+        if (updateSelectedOptions[i].name === "VillageId") {
+          updateSelectedOptions[i] = {
+            value: "",
+            label: "Пусто",
+            name: "VillageId",
+          };
+          setSelectedOptions(updateSelectedOptions);
+          break;
         }
       }
-      setForm(Form);
-
-      // console.log("NEW ENUMS")
-    } else if (
-      option.name === "recipient_type" &&
-      taskType === "showTransitChargeForCDServicesCreatingForm"
-    ) {
-      console.log("RECIPIENT", option.name, option.value, fieldValue);
-      for (let s = 0; s < Form.sections.length; s++) {
-        for (let c = 0; c < Form.sections[s].contents.length; c++) {
-          if (Form.sections[s].contents[c].name === "registrar") {
-            if (option.value === 1) {
-              Form.sections[s].contents[c].show = true;
-              Form.sections[s].contents[c].edit = true;
-              fieldValue["corr_depository"] = null;
-              for (let i = 0; i < updateSelectedOptions.length; i++) {
-                if (updateSelectedOptions[i].name === "corr_depository") {
-                  updateSelectedOptions[i] = {
-                    value: "",
-                    label: "Пусто",
-                    name: "corr_depository",
-                  };
-                  setSelectedOptions(updateSelectedOptions);
-                  break;
-                }
-              }
-            } else {
-              Form.sections[s].contents[c].show = false;
-              Form.sections[s].contents[c].edit = false;
-            }
-          }
-          if (Form.sections[s].contents[c].name === "corr_depository") {
-            if (option.value === 2) {
-              Form.sections[s].contents[c].show = true;
-              Form.sections[s].contents[c].edit = true;
-              fieldValue["registrar"] = null;
-              for (let i = 0; i < updateSelectedOptions.length; i++) {
-                if (updateSelectedOptions[i].name === "registrar") {
-                  updateSelectedOptions[i] = {
-                    value: "",
-                    label: "Пусто",
-                    name: "registrar",
-                  };
-                  setSelectedOptions(updateSelectedOptions);
-                  break;
-                }
-              }
-            } else {
-              Form.sections[s].contents[c].show = false;
-              Form.sections[s].contents[c].edit = false;
-            }
-          }
-        }
-      }
-      setForm(Form);
-      // console.log("NEW ENUMS")
+      let filtered = await filterEnumDataByValue(
+        "VillageId",
+        "settlementId",
+        option.value
+      );
+      setEnumOptions({
+        ...enumOptions,
+        ["VillageId"]: filtered,
+      });
     }
+  }
+  function filterEnumDataByValue(child, parent, value) {
+    let filtered = [
+      {
+        value: "",
+        label: "Пусто",
+        name: child,
+      },
+    ];
+    for (let i = 0; i < enumData.length; i++) {
+      if (enumData[i].name === child) {
+        for (let d = 0; d < enumData[i].data.length; d++) {
+          if (enumData[i].data[d][parent] === value) {
+            filtered.push({
+              value: enumData[i].data[d].id,
+              label: enumData[i].data[d].label,
+              name: child,
+            });
+          }
+        }
+      }
+    }
+    return filtered;
   }
   function handleDateTimeChange(event) {
     let convertedDate = getCurrentFullDateTime(event.target.value);
@@ -590,14 +528,6 @@ export default (props) => {
     const uuidv1 = require("uuid/v1");
     return uuidv1();
   }
-  // random numbers generator
-  function keyGen(length) {
-    var password = generator.generate({
-      length: length,
-      numbers: true,
-    });
-    return password;
-  }
   function swAllert(text, icon) {
     return swal({
       text: text,
@@ -717,107 +647,6 @@ export default (props) => {
       return attrs;
     }
   }
-  function getContentType(key) {
-    for (let s = 0; s < Form.sections.length; s++) {
-      for (let c = 0; c < Form.sections[s].contents.length; c++) {
-        if (key === Form.sections[s].contents[c].name) {
-          return Form.sections[s].contents[c].type;
-        }
-      }
-    }
-  }
-  // filter users by filled parameters
-  function filterDocList(fetchFrom, fetchTo, Data) {
-    console.log("FILTER DOCL", fieldValue);
-    var newDocList = [];
-    if (Object.keys(fieldValue).length === 0) {
-      newDocList = Data;
-    } else {
-      for (let i = 0; i < Data.length; i++) {
-        let match = false;
-        for (let key in fieldValue) {
-          if (Data[i][key] !== null) {
-            if (fieldValue[key] === null || fieldValue[key] === "") {
-              match = true;
-            } else {
-              let contentType = getContentType(key);
-              if (contentType === "Text") {
-                let searchField = fieldValue[key].toLowerCase();
-                let dataField = Data[i][key].toLowerCase();
-                let includeSearch = dataField.includes(searchField);
-                if (includeSearch === true) {
-                  match = true;
-                } else {
-                  match = false;
-                  break;
-                }
-              } else if (contentType === "Int" || contentType === "Float") {
-                if (fieldValue[key] >= 0 || fieldValue[key] < 0) {
-                  let searchField = fieldValue[key].toString();
-                  let dataField = Data[i][key].toString();
-                  let includeSearch = dataField.includes(searchField);
-                  if (includeSearch === true) {
-                    match = true;
-                  } else {
-                    match = false;
-                    break;
-                  }
-                } else {
-                  match = true;
-                }
-              } else if (contentType === "Enum") {
-                if (fieldValue[key] === Data[i][key]) {
-                  match = true;
-                } else {
-                  match = false;
-                  break;
-                }
-              } else if (contentType === "DateTime") {
-                let searchField = parseDate(fieldValue[key]);
-                let dataField = parseDate(Data[i][key]);
-                if (searchField === "NaN-NaN-NaN") {
-                  match = true;
-                } else {
-                  if (searchField === dataField) {
-                    match = true;
-                  } else {
-                    match = false;
-                    break;
-                  }
-                }
-              } else if (contentType === "Bool") {
-                if (fieldValue[key] === Data[i][key]) {
-                  match = true;
-                } else {
-                  match = false;
-                  break;
-                }
-              }
-            }
-          } else {
-            match = false;
-            break;
-          }
-        }
-        if (match === true) {
-          newDocList.push(Data[i]);
-        }
-      }
-    }
-    setFilteredDocList(newDocList);
-    fetchBySize(fetchFrom, fetchTo, newDocList);
-  }
-  // get rows amount of filtered users by size
-  function fetchBySize(fetchFrom, fetchTo, Data) {
-    // console.log("fetchFrom", "fetchTo")
-    let newDocList = [];
-    for (let i = fetchFrom; i <= fetchTo; i++) {
-      if (Data[i] !== undefined) {
-        newDocList.push(Data[i]);
-      }
-    }
-    setDocList(newDocList);
-  }
 
   /***USER_ACTION - действие пользователя***********************************************************************************************/
   async function buttonClick(name, item) {
@@ -872,6 +701,22 @@ export default (props) => {
         },
       };
       console.log("select:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    } else if (name === "next") {
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "next" },
+          application: { value: JSON.stringify(fieldValue) },
+        },
+      };
+      console.log("next:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
     } else if (name === "filterClMonthDocList") {
@@ -1372,6 +1217,7 @@ export default (props) => {
                 backgroundColor: crGreen,
                 borderTopLeftRadius: 10,
                 borderTopRightRadius: 10,
+                // wordWrap: "break-word",
               }}
             >
               {section.label}
@@ -1397,7 +1243,7 @@ export default (props) => {
                       color: crBlue,
                       fontSize: 14,
                       fontFamily: "Courier",
-                      whiteSpace: "nowrap",
+                      // whiteSpace: "nowrap",
                     }}
                   >
                     {contentItem.label}

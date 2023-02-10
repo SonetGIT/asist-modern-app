@@ -272,6 +272,7 @@ export default (props) => {
                   fontSize: 14,
                   backgroundColor: sectionColor,
                   width: "100%",
+                  wordWrap: "break-word",
                 }}
               >
                 {section.label}
