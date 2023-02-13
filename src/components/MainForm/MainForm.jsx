@@ -341,7 +341,49 @@ export default (props) => {
       updateSelectedOptions.push(option);
       setSelectedOptions(updateSelectedOptions);
     }
-    if (option.name === "DjamoatId") {
+    if (option.name === "RegionId") {
+      for (let i = 0; i < updateSelectedOptions.length; i++) {
+        if (updateSelectedOptions[i].name === "DistrictId") {
+          updateSelectedOptions[i] = {
+            value: "",
+            label: "Пусто",
+            name: "DistrictId",
+          };
+          setSelectedOptions(updateSelectedOptions);
+          break;
+        }
+      }
+      let filtered = await filterEnumDataByValue(
+        "DistrictId",
+        "regionId",
+        option.value
+      );
+      setEnumOptions({
+        ...enumOptions,
+        ["DistrictId"]: filtered,
+      });
+    } else if (option.name === "DistrictId") {
+      for (let i = 0; i < updateSelectedOptions.length; i++) {
+        if (updateSelectedOptions[i].name === "DjamoatId") {
+          updateSelectedOptions[i] = {
+            value: "",
+            label: "Пусто",
+            name: "DjamoatId",
+          };
+          setSelectedOptions(updateSelectedOptions);
+          break;
+        }
+      }
+      let filtered = await filterEnumDataByValue(
+        "DjamoatId",
+        "districtId",
+        option.value
+      );
+      setEnumOptions({
+        ...enumOptions,
+        ["DjamoatId"]: filtered,
+      });
+    } else if (option.name === "DjamoatId") {
       // Clear Village Option
       for (let i = 0; i < updateSelectedOptions.length; i++) {
         if (updateSelectedOptions[i].name === "VillageId") {
