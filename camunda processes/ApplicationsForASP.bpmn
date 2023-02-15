@@ -477,19 +477,21 @@ execution.setVariable("tableFormButtons", "null")
 execution.setVariable("userAction", "null")
 execution.setVariable("formType", "edit")</bpmn:script>
     </bpmn:scriptTask>
-    <bpmn:serviceTask id="Activity_0hn80vf" name="selectedDoc">
+    <bpmn:serviceTask id="Activity_0hn80vf" name="GenerateNewNumber">
       <bpmn:extensionElements>
         <camunda:connector>
           <camunda:inputOutput>
-            <camunda:inputParameter name="url">${asistRESTApi}/ASIST-MODERN-API/api/Document/GetDocumentById/${docId}?userId=${userId}</camunda:inputParameter>
+            <camunda:inputParameter name="url">${asistRESTApi}/ASIST-MODERN-API/api/Document/GetDocNewNumber?userId=${userId}</camunda:inputParameter>
             <camunda:inputParameter name="method">GET</camunda:inputParameter>
             <camunda:inputParameter name="headers">
               <camunda:map>
                 <camunda:entry key="Content-Type">application/json</camunda:entry>
               </camunda:map>
             </camunda:inputParameter>
-            <camunda:outputParameter name="selectedDoc">
-              <camunda:script scriptFormat="Javascript">S(response).toString()</camunda:script>
+            <camunda:outputParameter name="generatedNo">
+              <camunda:script scriptFormat="Javascript">S(response).prop("Value")
+
+</camunda:script>
             </camunda:outputParameter>
           </camunda:inputOutput>
           <camunda:connectorId>http-connector</camunda:connectorId>
@@ -516,7 +518,7 @@ execution.setVariable("formType", "edit")</bpmn:script>
           <camunda:connectorId>http-connector</camunda:connectorId>
         </camunda:connector>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1n4eyp5</bpmn:incoming>
+      <bpmn:incoming>Flow_0j3t20j</bpmn:incoming>
       <bpmn:outgoing>Flow_1c4t81z</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:scriptTask id="Activity_12bbmnf" name="Task" scriptFormat="Javascript">
@@ -562,7 +564,7 @@ execution.setVariable("taskVariables", JSON.stringify(variables))</bpmn:script>
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">#{userAction  == "select" }</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_092ctex" sourceRef="Activity_125dmoi" targetRef="Activity_0hn80vf" />
-    <bpmn:sequenceFlow id="Flow_1n4eyp5" sourceRef="Activity_0hn80vf" targetRef="Activity_1o7oi2v" />
+    <bpmn:sequenceFlow id="Flow_1n4eyp5" sourceRef="Activity_0hn80vf" targetRef="Activity_11iicth" />
     <bpmn:exclusiveGateway id="Gateway_16tyjx5">
       <bpmn:incoming>Flow_1lvirzs</bpmn:incoming>
       <bpmn:outgoing>Flow_1a4isi5</bpmn:outgoing>
@@ -674,6 +676,22 @@ execution.setVariable("taskVariables", JSON.stringify(variables))</bpmn:script>
     <bpmn:sequenceFlow id="Flow_0hoioy8" name="next" sourceRef="Gateway_16tyjx5" targetRef="Activity_0tkmjmq">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">#{userAction  == "next" }</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
+    <bpmn:scriptTask id="Activity_11iicth" name="Variables" scriptFormat="Javascript">
+      <bpmn:incoming>Flow_1n4eyp5</bpmn:incoming>
+      <bpmn:outgoing>Flow_0j3t20j</bpmn:outgoing>
+      <bpmn:script>//var JSONObject = Java.type('org.camunda.bpm.engine.impl.util.json.JSONObject')
+
+var newNo = {
+"name": "No", 
+"type": "Text", 
+"value": generatedNo
+}
+var attrs = S(selectedDoc).prop("attributes").append(newNo)
+
+var newSelDoc = S(selectedDoc).prop("attributes", attrs)
+execution.setVariable("selectedDoc", newSelDoc.toString())</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0j3t20j" sourceRef="Activity_11iicth" targetRef="Activity_1o7oi2v" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="process_22d2b2bf-ce8d-41d3-9b97-5bd8b112f2ce">
@@ -715,8 +733,10 @@ execution.setVariable("taskVariables", JSON.stringify(variables))</bpmn:script>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1n4eyp5_di" bpmnElement="Flow_1n4eyp5" bioc:stroke="rgb(67, 160, 71)" bioc:fill="rgb(200, 230, 201)">
-        <di:waypoint x="1620" y="370" />
-        <di:waypoint x="1660" y="370" />
+        <di:waypoint x="1570" y="330" />
+        <di:waypoint x="1570" y="305" />
+        <di:waypoint x="1600" y="305" />
+        <di:waypoint x="1600" y="280" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_092ctex_di" bpmnElement="Flow_092ctex" bioc:stroke="rgb(67, 160, 71)" bioc:fill="rgb(200, 230, 201)">
         <di:waypoint x="1480" y="370" />
@@ -911,6 +931,12 @@ execution.setVariable("taskVariables", JSON.stringify(variables))</bpmn:script>
           <dc:Bounds x="166" y="112" width="66" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0j3t20j_di" bpmnElement="Flow_0j3t20j">
+        <di:waypoint x="1630" y="280" />
+        <di:waypoint x="1630" y="305" />
+        <di:waypoint x="1680" y="305" />
+        <di:waypoint x="1680" y="330" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="Event_1apmtbq_di" bpmnElement="Event_1apmtbq" bioc:stroke="rgb(67, 160, 71)" bioc:fill="rgb(200, 230, 201)">
         <dc:Bounds x="172" y="102" width="36" height="36" />
       </bpmndi:BPMNShape>
@@ -1042,6 +1068,9 @@ execution.setVariable("taskVariables", JSON.stringify(variables))</bpmn:script>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_19djm3x_di" bpmnElement="Activity_19djm3x">
         <dc:Bounds x="2720" y="330" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_11iicth_di" bpmnElement="Activity_11iicth">
+        <dc:Bounds x="1580" y="200" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

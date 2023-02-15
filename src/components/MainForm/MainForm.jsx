@@ -125,6 +125,7 @@ export default (props) => {
   const [taskID] = useState(props.userTask.taskID);
   const [Form, setForm] = useState(props.userTask.Form);
   const [selectedDoc, setSelectedDoc] = useState(null);
+  const [subDocuments, setSubDocuments] = useState({});
   const [docId, setDocId] = useState(props.userTask.docId);
   const [formType] = useState(props.userTask.formType);
   const [docList, setDocList] = useState(null);
@@ -187,6 +188,13 @@ export default (props) => {
       console.log("FIELDVAL", fields);
       setSelectedDoc(parsedSelectedDoc);
       setFieldValue(fields);
+    }
+    if (
+      props.userTask.subDocuments !== "null" &&
+      props.userTask.subDocuments !== undefined &&
+      props.userTask.subDocuments !== null
+    ) {
+      setSubDocuments(props.userTask.subDocuments);
     }
     if (
       props.userTask.tableFormButtons !== "null" &&
@@ -601,7 +609,6 @@ export default (props) => {
         }
       }
     }
-
     if (attrs.attributes.length === 0) {
       return {};
     } else {
@@ -682,14 +689,12 @@ export default (props) => {
         }
       }
     }
-
     if (attrs.attributes.length === 0) {
       return {};
     } else {
       return attrs;
     }
   }
-
   /***USER_ACTION - действие пользователя***********************************************************************************************/
   async function buttonClick(name, item) {
     if (name === "findDocument") {
@@ -730,6 +735,9 @@ export default (props) => {
       sendFieldValues(commandJson);
       clearTabData(process_id);
     } else if (name === "select") {
+      let attrs = {
+        attributes: [{ name: "Person", type: "Doc", value: item.id }],
+      };
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -739,7 +747,7 @@ export default (props) => {
         userRole: userProfile.userRole,
         variables: {
           userAction: { value: "select" },
-          docId: { value: item.id },
+          selectedDoc: { value: JSON.stringify(attrs) },
         },
       };
       console.log("select:", commandJson);
@@ -1285,13 +1293,12 @@ export default (props) => {
                       color: crBlue,
                       fontSize: 14,
                       fontFamily: "Courier",
-                      // whiteSpace: "nowrap",
                     }}
                   >
                     {contentItem.label}
                   </td>
                   <td style={{ width: "60%" }}>
-                    {contentBuilder(contentItem)}
+                    {contentBuilder(contentItem, section)}
                   </td>
                 </tr>
               )
@@ -1301,7 +1308,7 @@ export default (props) => {
     );
   }
   // Creating components by it's type
-  function contentBuilder(contentItem) {
+  function contentBuilder(contentItem, section) {
     // if(contentItem.show === true)
     // }
     if (contentItem.type === "Text") {
@@ -1316,8 +1323,8 @@ export default (props) => {
             formType === "view" || contentItem.edit === false ? true : false
           }
           onBlur={handleChange}
-          defaultValue={
-            fieldValue[contentItem.name] ? fieldValue[contentItem.name] : ""
+          defaultValue={section.type === "Doc" ? getSubDocFieldValue(section.name, contentItem.name) 
+          : fieldValue[contentItem.name] ? fieldValue[contentItem.name] : ""
           }
         />
       );
@@ -1327,33 +1334,34 @@ export default (props) => {
         label: "Пусто",
         name: contentItem.name,
       };
-      if (fieldValue[contentItem.name] !== undefined) {
+      let fieldVal = null
+
+      if(section.type === "Doc"){
+        fieldVal = getSubDocFieldValue(section.name, contentItem.name)
+      }
+      else {fieldVal = fieldValue[contentItem.name]}
+      if (fieldVal !== undefined) {
         for (let i = 0; i < enumOptions[contentItem.name].length; i++) {
-          if (
-            fieldValue[contentItem.name] ===
-            enumOptions[contentItem.name][i].value
-          ) {
+          if (fieldVal === enumOptions[contentItem.name][i].value) {
             selectedOption = enumOptions[contentItem.name][i];
             break;
           }
         }
       }
-      if (selectedOptions.length !== 0) {
-        for (let i = 0; i < selectedOptions.length; i++) {
-          if (contentItem.name === selectedOptions[i].name) {
-            selectedOption = selectedOptions[i];
-          }
-        }
-      }
+      // if (selectedOptions.length !== 0) {
+      //   for (let i = 0; i < selectedOptions.length; i++) {
+      //     if (contentItem.name === selectedOptions[i].name) {
+      //       selectedOption = selectedOptions[i];
+      //     }
+      //   }
+      // }
       return (
         <Select
           name={contentItem.name}
           value={selectedOption}
           onChange={handleSelectChange}
           options={enumOptions[contentItem.name]}
-          isDisabled={
-            formType === "view" || contentItem.edit === false ? true : false
-          }
+          isDisabled={formType === "view" || contentItem.edit === false ? true : false}
         />
       );
     } else if (contentItem.type === "Bool") {
@@ -1372,12 +1380,22 @@ export default (props) => {
           disabled={
             formType === "view" || contentItem.edit === false ? true : false
           }
-          checked={
+          checked={section.type === "Doc" ? 
+          (
+            getSubDocFieldValue(section.name, contentItem.name) === false ||
+            getSubDocFieldValue(section.name, contentItem.name) === null ||
+            getSubDocFieldValue(section.name, contentItem.name) === undefined
+            ? false
+            : true
+          ) 
+          : 
+          (
             fieldValue[contentItem.name] === false ||
             fieldValue[contentItem.name] === null ||
             fieldValue[contentItem.name] === undefined
               ? false
               : true
+            )
           }
         />
       );
@@ -1388,10 +1406,8 @@ export default (props) => {
             formType === "view" || contentItem.edit === false ? true : false
           }
           style={{ width: "100%", height: 10 }}
-          defaultValue={
-            fieldValue[contentItem.name] !== undefined
-              ? fieldValue[contentItem.name]
-              : ""
+          defaultValue={section.type === "Doc" ? getSubDocFieldValue(section.name, contentItem.name) 
+          : (fieldValue[contentItem.name] !== undefined  ? fieldValue[contentItem.name] : "")
           }
           // value = {(fieldValue[contentItem.name] !== undefined) ? fieldValue[contentItem.name]: ""}
           onBlur={handleIntChange}
@@ -1405,7 +1421,7 @@ export default (props) => {
         <TextField
           name={contentItem.name}
           onBlur={handleFloatChange}
-          value={fieldValue[contentItem.name]}
+          value={section.type === "Doc" ? getSubDocFieldValue(section.name, contentItem.name) : fieldValue[contentItem.name]}
           style={{ width: "100%", height: 10 }}
           disabled={
             formType === "view" || contentItem.edit === false ? true : false
@@ -1420,10 +1436,8 @@ export default (props) => {
           name={contentItem.name}
           onBlur={handleDateTimeChange}
           style={{ width: "100%", height: 10 }}
-          defaultValue={
-            fieldValue[contentItem.name] !== undefined
-              ? parseDate(fieldValue[contentItem.name])
-              : ""
+          defaultValue={ section.type === "Doc" ? parseDate(getSubDocFieldValue(section.name, contentItem.name)) 
+            : (fieldValue[contentItem.name] !== undefined ? parseDate(fieldValue[contentItem.name]) : "")
           }
           disabled={
             formType === "view" || contentItem.edit === false ? true : false
@@ -1433,6 +1447,13 @@ export default (props) => {
           }}
         />
       );
+    }
+  }
+  function getSubDocFieldValue(subDocName, contentItemName) {
+    for (let i = 0; i < subDocuments[subDocName].attributes.length; i++) {
+      if (subDocuments[subDocName].attributes[i].name === contentItemName) {
+        return subDocuments[subDocName].attributes[i].value;
+      }
     }
   }
   // Create grid form components
