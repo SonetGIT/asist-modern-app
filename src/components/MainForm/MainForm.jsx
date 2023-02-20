@@ -25,10 +25,11 @@ import { styled } from "@mui/material/styles";
 // Libraries
 import swal from "sweetalert"; // https://sweetalert.js.org/guides/
 // import Tooltip from "@material-ui/core/Tooltip";
-import Moment from "moment";
 import { green } from "@material-ui/core/colors";
 import { makeStyles } from "@material-ui/core/styles";
 import XLSX from "xlsx";
+var moment = require('moment'); // require
+ 
 // Colors
 var crSnow = "#FFFAFA";
 var crBlack = "#000000";
@@ -597,6 +598,13 @@ export default (props) => {
     };
     if (Form !== null && Form !== "null") {
       for (let s = 0; s < Form.sections.length; s++) {
+        if(Form.sections[s].type === "Doc"){
+          attrs.attributes.push({
+            name: Form.sections[s].name,
+            value: fieldValue[Form.sections[s].name],
+            type: "Doc",
+          });
+        }
         for (let c = 0; c < Form.sections[s].contents.length; c++) {
           let name = Form.sections[s].contents[c].name;
           if (fieldValue[name] !== undefined) {
@@ -754,6 +762,17 @@ export default (props) => {
       sendFieldValues(commandJson);
       clearTabData(process_id);
     } else if (name === "next") {
+      let application = getFieldValuesSaveDocument()
+      let selDoc = getFieldValuesSaveDocument()
+      selDoc.attributes.push({name: "Application", type: "Doc", value: null})
+      let personId = null;
+      for (let i = 0; i < selDoc.attributes.length; i++){
+        if(selDoc.attributes[i].name === "Person")
+        {
+          personId = selDoc.attributes[i].value;
+          break;
+        }
+      }
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -763,13 +782,46 @@ export default (props) => {
         userRole: userProfile.userRole,
         variables: {
           userAction: { value: "next" },
-          application: { value: JSON.stringify(fieldValue) },
+          personId: {value: personId},
+          regDateRef: {value: moment(fieldValue.Date).format("YYYY-MM-DD")},
+          application: { value: JSON.stringify(application) },
+          selectedDoc: { value: JSON.stringify(selDoc) }
         },
       };
       console.log("next:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "filterClMonthDocList") {
+    }
+    else if (name === "saveAppStateDoc") 
+    {
+      let docToSave = getFieldValuesSaveDocument();
+      let appState = {
+        attributes: [],
+      };
+      for (let i = 0; i < docToSave.attributes.length; i++){
+        if(docToSave.attributes[i].name !== "Application")
+        {
+          appState.attributes.push(docToSave.attributes[i])
+        }
+      }
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "saveAppStateDoc" },
+          document: { value: JSON.stringify(appState) },
+        },
+      };
+      console.log("saveAppStateDoc:", commandJson);
+      sendFieldValues(commandJson);
+      // swAllert("Данные сохранены!", "success")
+      clearTabData(process_id);
+    }
+    else if (name === "filterClMonthDocList") {
       let filterDoc = getFieldValuesFilterDocuments();
 
       let commandJson = {
@@ -1199,7 +1251,9 @@ export default (props) => {
       sendFieldValues(commandJson);
       // swAllert("Данные успешно обновлены!", "success")
       clearTabData(process_id);
-    } else if (name === "saveDocument") {
+    } 
+    else if (name === "saveDocument") 
+    {
       let docToSave = getFieldValuesSaveDocument();
       let commandJson = {
         commandType: "completeTask",
@@ -1217,7 +1271,8 @@ export default (props) => {
       sendFieldValues(commandJson);
       // swAllert("Данные сохранены!", "success")
       clearTabData(process_id);
-    } else if (name === "back") {
+    } 
+    else if (name === "back") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1493,7 +1548,7 @@ export default (props) => {
       } else {
         // console.log("ITEM", dataItem, value)
         let dateRev = attribute.value.substring(0, 10);
-        let date = Moment(dateRev).format("DD-MM-YYYY");
+        let date = moment(dateRev).format("DD-MM-YYYY");
         return date;
       }
     } else if (formItem.type === "Float") {
@@ -1756,18 +1811,11 @@ export default (props) => {
                               )}
                             {gridForm.sections.map((section) => {
                               return section.contents.map((contentItem) => {
-                                for (
-                                  let a = 0;
-                                  a < dataItem.attributes.length;
-                                  a++
-                                ) {
+                                for (let a = 0; a < dataItem.attributes.length; a++) {
                                   // console.log("ITEM AZA", dataItem.attributes[a].name, "ITEM KGS", contentItem.name)
                                   //dataItem.attributes[a].name - название поля из API
                                   //contentItem.name - название поля из JSON
-                                  if (
-                                    dataItem.attributes[a].name ===
-                                    contentItem.name
-                                  ) {
+                                  if (dataItem.attributes[a].name === contentItem.name) {
                                     return (
                                       <td
                                         style={{
@@ -1780,10 +1828,7 @@ export default (props) => {
                                           // строка в таблице и borderTop (сверху)
                                         }}
                                       >
-                                        {getGridFormItems(
-                                          dataItem.attributes[a],
-                                          contentItem
-                                        )}
+                                        {getGridFormItems(dataItem.attributes[a], contentItem)}
                                       </td>
                                     );
                                   }

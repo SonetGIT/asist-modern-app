@@ -428,7 +428,8 @@ export default () => {
           text: incomingJson.text,
           icon: incomingJson.icon,
         });
-      } else if (incomingJson.messageType === "toast") {
+      } 
+      else if (incomingJson.messageType === "toast") {
         if (incomingJson.toastType === "success") {
           toast(incomingJson.toastText, {
             position: "top-right",
@@ -922,6 +923,8 @@ export default () => {
                           <td style={{ fontSize: 12, fontFamily: "Courier" }}>
                             {getRole(userProfile.userRole)}
                           </td>
+                        </tr>
+                        <td align="right" > 
                           Esc{" "}
                           <IoCloseCircle
                             style={{
@@ -931,7 +934,7 @@ export default () => {
                             onClick={() => keycloak.logout()}
                             align="right"
                           />
-                        </tr>
+                          </td>
                       </tbody>
                     </table>
                   </td>
