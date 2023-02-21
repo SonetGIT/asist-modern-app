@@ -605,16 +605,18 @@ export default (props) => {
             type: "Doc",
           });
         }
-        for (let c = 0; c < Form.sections[s].contents.length; c++) {
-          let name = Form.sections[s].contents[c].name;
-          if (fieldValue[name] !== undefined) {
-            attrs.attributes.push({
-              name: name,
-              value: fieldValue[name],
-              type: Form.sections[s].contents[c].type,
-            });
+        else{
+          for (let c = 0; c < Form.sections[s].contents.length; c++) {
+            let name = Form.sections[s].contents[c].name;
+            if (fieldValue[name] !== undefined) {
+              attrs.attributes.push({
+                name: name,
+                value: fieldValue[name],
+                type: Form.sections[s].contents[c].type,
+              });
+            }
           }
-        }
+        } 
       }
     }
     if (attrs.attributes.length === 0) {
@@ -763,6 +765,10 @@ export default (props) => {
       clearTabData(process_id);
     } else if (name === "next") {
       let application = getFieldValuesSaveDocument()
+      let saveApp = {
+        Application: application,
+        ApplicationState: null
+      }
       let selDoc = getFieldValuesSaveDocument()
       selDoc.attributes.push({name: "Application", type: "Doc", value: null})
       let personId = null;
@@ -785,6 +791,7 @@ export default (props) => {
           personId: {value: personId},
           regDateRef: {value: moment(fieldValue.Date).format("YYYY-MM-DD")},
           application: { value: JSON.stringify(application) },
+          saveApp: { value: JSON.stringify(saveApp) },
           selectedDoc: { value: JSON.stringify(selDoc) }
         },
       };
@@ -795,6 +802,7 @@ export default (props) => {
     else if (name === "saveAppStateDoc") 
     {
       let docToSave = getFieldValuesSaveDocument();
+      // console.log("docToSave:", docToSave);
       let appState = {
         attributes: [],
       };
@@ -818,7 +826,6 @@ export default (props) => {
       };
       console.log("saveAppStateDoc:", commandJson);
       sendFieldValues(commandJson);
-      // swAllert("Данные сохранены!", "success")
       clearTabData(process_id);
     }
     else if (name === "filterClMonthDocList") {
