@@ -28,8 +28,10 @@ export default (props) => {
     props.userTask.taskType === "showPersonCreatForm" ||
     props.userTask.taskType === "showPersonFilterForm" ||
     props.userTask.taskType === "showPersonOpenForm" ||
+    props.userTask.taskType === "showPersonSaveForm" ||
     props.userTask.taskType === "showApplicationForm" ||
     props.userTask.taskType === "showAppStateForm" ||
+    props.userTask.taskType === "showAppStateSaveForm" ||
     props.userTask.taskType === "showApplicationsGridForm" ||
     props.userTask.taskType === "showCloseMonthCreateParamForm" ||
     props.userTask.taskType === "showCloseMonthSearchParamForm" ||

@@ -1512,11 +1512,14 @@ export default (props) => {
     }
   }
   function getSubDocFieldValue(subDocName, contentItemName) {
-    for (let i = 0; i < subDocuments[subDocName].attributes.length; i++) {
-      if (subDocuments[subDocName].attributes[i].name === contentItemName) {
-        return subDocuments[subDocName].attributes[i].value;
+    try{
+      for (let i = 0; i < subDocuments[subDocName].attributes.length; i++) {
+        if (subDocuments[subDocName].attributes[i].name === contentItemName) {
+          return subDocuments[subDocName].attributes[i].value;
+        }
       }
     }
+    catch(er){return null}
   }
   // Create grid form components
   function getGridFormItems(attribute, formItem) {
