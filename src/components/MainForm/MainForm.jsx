@@ -828,9 +828,9 @@ export default (props) => {
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
-    else if (name === "filterClMonthDocList") {
+    else if (name === "filterClMonthDocList") 
+    {
       let filterDoc = getFieldValuesFilterDocuments();
-
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
