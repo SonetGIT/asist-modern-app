@@ -268,13 +268,12 @@ execution.setVariable("docList", docList)*/</bpmn:script>
     <bpmn:sequenceFlow id="Flow_1r6lvop" name="paginationClick" sourceRef="Gateway_0yg1s6j" targetRef="Activity_1q0k252">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">#{userAction == "paginationClick"}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:serviceTask id="Activity_1d88efz" name="POST list">
+    <bpmn:serviceTask id="Activity_1d88efz" name="FilterApplicationsByStateId">
       <bpmn:extensionElements>
         <camunda:connector>
           <camunda:inputOutput>
             <camunda:inputParameter name="payload">${searchBody}</camunda:inputParameter>
-            <camunda:inputParameter name="url">${asistRESTApi}/ASIST-MODERN-API/api/Document/FilterApplicationsByStateId?size=${size}&amp;page=${page}&amp;userId=${userId}&amp;stateTypeId=F062290E-42E3-4E24-8547-9FA7606547D7
-</camunda:inputParameter>
+            <camunda:inputParameter name="url">${asistRESTApi}/ASIST-MODERN-API/api/Document/FilterApplicationsByStateId?size=${size}&amp;page=${page}&amp;userId=${userId}&amp;stateTypeId=F062290E-42E3-4E24-8547-9FA7606547D7</camunda:inputParameter>
             <camunda:inputParameter name="method">POST</camunda:inputParameter>
             <camunda:inputParameter name="headers">
               <camunda:map>
@@ -607,6 +606,14 @@ execution.setVariable("docList2", docList2)</bpmn:script>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="process_b4f9b5ba-fec3-4a78-a875-20360330e85b">
+      <bpmndi:BPMNEdge id="Flow_0pjy3qj_di" bpmnElement="Flow_0pjy3qj">
+        <di:waypoint x="800" y="210" />
+        <di:waypoint x="830" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ob0dnz_di" bpmnElement="Flow_0ob0dnz">
+        <di:waypoint x="680" y="210" />
+        <di:waypoint x="700" y="210" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0btz8ap_di" bpmnElement="Flow_0btz8ap" bioc:stroke="rgb(67, 160, 71)" bioc:fill="rgb(200, 230, 201)">
         <di:waypoint x="1020" y="630" />
         <di:waypoint x="1053" y="630" />
@@ -830,14 +837,6 @@ execution.setVariable("docList2", docList2)</bpmn:script>
         <di:waypoint x="553" y="210" />
         <di:waypoint x="580" y="210" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0ob0dnz_di" bpmnElement="Flow_0ob0dnz">
-        <di:waypoint x="680" y="210" />
-        <di:waypoint x="700" y="210" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0pjy3qj_di" bpmnElement="Flow_0pjy3qj">
-        <di:waypoint x="800" y="210" />
-        <di:waypoint x="830" y="210" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1" bioc:stroke="rgb(67, 160, 71)" bioc:fill="rgb(200, 230, 201)">
         <dc:Bounds x="252" y="192" width="36" height="36" />
       </bpmndi:BPMNShape>
@@ -885,6 +884,12 @@ execution.setVariable("docList2", docList2)</bpmn:script>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1yn8cyd_di" bpmnElement="Activity_1yn8cyd">
         <dc:Bounds x="330" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0t71cgi_di" bpmnElement="Activity_0t71cgi">
+        <dc:Bounds x="700" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1d88efz_di" bpmnElement="Activity_1d88efz" bioc:stroke="black" bioc:fill="white">
+        <dc:Bounds x="580" y="170" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1tgdble_di" bpmnElement="Activity_1tgdble">
         <dc:Bounds x="712" y="380" width="100" height="80" />
@@ -939,12 +944,6 @@ execution.setVariable("docList2", docList2)</bpmn:script>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1ecgcjw_di" bpmnElement="Activity_1ecgcjw">
         <dc:Bounds x="920" y="590" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1d88efz_di" bpmnElement="Activity_1d88efz" bioc:stroke="black" bioc:fill="white">
-        <dc:Bounds x="580" y="170" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0t71cgi_di" bpmnElement="Activity_0t71cgi">
-        <dc:Bounds x="700" y="170" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

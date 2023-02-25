@@ -1262,6 +1262,7 @@ export default (props) => {
     else if (name === "saveDocument") 
     {
       let docToSave = getFieldValuesSaveDocument();
+
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1272,11 +1273,12 @@ export default (props) => {
         variables: {
           userAction: { value: "saveDocument" },
           document: { value: JSON.stringify(docToSave) },
+          emptyDoc: { value: JSON.stringify({attributes: []}) },
         },
       };
       console.log("saveDocument:", commandJson);
       sendFieldValues(commandJson);
-      // swAllert("Данные сохранены!", "success")
+      //swAllert("Данные сохранены!", "success")
       clearTabData(process_id);
     } 
     else if (name === "back") {
