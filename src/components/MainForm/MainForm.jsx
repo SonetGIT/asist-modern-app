@@ -440,7 +440,8 @@ export default (props) => {
     return filtered;
   }
   function handleDateTimeChange(event) {
-    let convertedDate = getCurrentFullDateTime(event.target.value);
+    // let convertedDate = getCurrentFullDateTime(event.target.value);
+    let convertedDate = moment(event.target.value).format("YYYY-MM-DD")
     fieldValue[event.target.name] = convertedDate;
     setFieldValue(fieldValue);
     // console.log("DATE CHANGE", event.target.value)
@@ -758,6 +759,8 @@ export default (props) => {
         variables: {
           userAction: { value: "select" },
           selectedDoc: { value: JSON.stringify(attrs) },
+          docId: {value: item.id},
+          emptyDoc: { value: JSON.stringify({attributes: []}) },
         },
       };
       console.log("select:", commandJson);
@@ -799,6 +802,156 @@ export default (props) => {
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
+    else if (name === "createFamMemDoc") 
+    {
+      // let docToSave = getFieldValuesSaveDocument();
+      // console.log("docToSave:", docToSave);
+      // let appState = {
+      //   attributes: [],
+      // };
+      let appStateId = null
+      for (let i = 0; i < selectedDoc.attributes.length; i++){
+        if(selectedDoc.attributes[i].name === "Application_State")
+        {
+          appStateId = selectedDoc.attributes[i].value
+        }
+      }
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "createFamMemDoc" },
+          appStateId: { value: appStateId },
+        },
+      };
+      console.log("createFamMemDoc:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "saveFamMemDoc") 
+    {
+      let docToSave = getFieldValuesSaveDocument();
+      // console.log("docToSave:", docToSave);      
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "saveFamMemDoc" },
+          document: { value: JSON.stringify(docToSave) },
+        },
+      };
+      console.log("saveFamMemDoc:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "createLandPlotDoc") 
+    {
+      // let docToSave = getFieldValuesSaveDocument();
+      // console.log("docToSave:", docToSave);
+      // let appState = {
+      //   attributes: [],
+      // };
+      let appStateId = null
+      for (let i = 0; i < selectedDoc.attributes.length; i++){
+        if(selectedDoc.attributes[i].name === "Application_State")
+        {
+          appStateId = selectedDoc.attributes[i].value
+        }
+      }
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "createLandPlotDoc" },
+          appStateId: { value: appStateId },
+        },
+      };
+      console.log("createLandPlotDoc:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "saveLandPlotDoc") 
+    {
+      let docToSave = getFieldValuesSaveDocument();
+      // console.log("docToSave:", docToSave);      
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "saveLandPlotDoc" },
+          document: { value: JSON.stringify(docToSave) },
+        },
+      };
+      console.log("saveLandPlotDoc:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "createIncomeDoc") 
+    {
+      // let docToSave = getFieldValuesSaveDocument();
+      // console.log("docToSave:", docToSave);
+      // let appState = {
+      //   attributes: [],
+      // };
+      let appStateId = null
+      for (let i = 0; i < selectedDoc.attributes.length; i++){
+        if(selectedDoc.attributes[i].name === "Application_State")
+        {
+          appStateId = selectedDoc.attributes[i].value
+        }
+      }
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "createIncomeDoc" },
+          appStateId: { value: appStateId },
+        },
+      };
+      console.log("createIncomeDoc:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "saveIncomeDoc") 
+    {
+      let docToSave = getFieldValuesSaveDocument();
+      // console.log("docToSave:", docToSave);      
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "saveIncomeDoc" },
+          document: { value: JSON.stringify(docToSave) },
+        },
+      };
+      console.log("saveIncomeDoc:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
     else if (name === "saveAppStateDoc") 
     {
       let docToSave = getFieldValuesSaveDocument();
@@ -827,7 +980,7 @@ export default (props) => {
       console.log("saveAppStateDoc:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    }
+    }    
     else if (name === "filterClMonthDocList") 
     {
       let filterDoc = getFieldValuesFilterDocuments();
@@ -1302,17 +1455,21 @@ export default (props) => {
   }
   // Convert date to approptiate format
   function parseDate(date) {
-    try {
-      var newDate = new Date(date); // "2020-01-26"
-      var dd = String(newDate.getDate()).padStart(2, "0");
-      var mm = String(newDate.getMonth() + 1).padStart(2, "0"); //January is 0!
-      var yyyy = newDate.getFullYear();
-      var convertedDate = yyyy + "-" + mm + "-" + dd;
-      // console.log("CDATE", convertedDate)
-      return convertedDate;
-    } catch (er) {
-      return "NaN.NaN.NaN";
-    }
+    // try {
+    //   var newDate = new Date(date); // "2020-01-26"
+    //   var dd = String(newDate.getDate()).padStart(2, "0");
+    //   var mm = String(newDate.getMonth() + 1).padStart(2, "0"); //January is 0!
+    //   var yyyy = newDate.getFullYear();
+    //   var convertedDate = yyyy + "-" + dd + "-" + mm;
+    //    console.log("CDATE", convertedDate)
+    //   return convertedDate;
+    // } catch (er) {
+    //   console.log("ERR", er)
+    //   return "NaN.NaN.NaN";
+    // }
+    let newDate = moment(date).format("YYYY-MM-DD")
+    // console.log("CDATE", newDate)
+    return newDate
   }
   // Create sections with labels and call bodyBuilder function
   function sectionBuilder(section) {
@@ -1387,8 +1544,9 @@ export default (props) => {
             formType === "view" || contentItem.edit === false ? true : false
           }
           onBlur={handleChange}
-          defaultValue={section.type === "Doc" ? getSubDocFieldValue(section.name, contentItem.name) 
-          : fieldValue[contentItem.name] ? fieldValue[contentItem.name] : ""
+          defaultValue={getValue(contentItem.name, contentItem.type, section)
+          //   section.type === "Doc" ? getSubDocFieldValue(section.name, contentItem.name) 
+          // : fieldValue[contentItem.name] ? fieldValue[contentItem.name] : ""
           }
         />
       );
@@ -1444,23 +1602,24 @@ export default (props) => {
           disabled={
             formType === "view" || contentItem.edit === false ? true : false
           }
-          checked={section.type === "Doc" ? 
-          (
-            getSubDocFieldValue(section.name, contentItem.name) === false ||
-            getSubDocFieldValue(section.name, contentItem.name) === null ||
-            getSubDocFieldValue(section.name, contentItem.name) === undefined
-            ? false
-            : true
-          ) 
-          : 
-          (
-            fieldValue[contentItem.name] === false ||
-            fieldValue[contentItem.name] === null ||
-            fieldValue[contentItem.name] === undefined
-              ? false
-              : true
-            )
-          }
+          checked = {getValue(contentItem.name, contentItem.type, section)}
+          // checked={section.type === "Doc" ? 
+          // (
+          //   getSubDocFieldValue(section.name, contentItem.name) === false ||
+          //   getSubDocFieldValue(section.name, contentItem.name) === null ||
+          //   getSubDocFieldValue(section.name, contentItem.name) === undefined
+          //   ? false
+          //   : true
+          // ) 
+          // : 
+          // (
+          //   fieldValue[contentItem.name] === false ||
+          //   fieldValue[contentItem.name] === null ||
+          //   fieldValue[contentItem.name] === undefined
+          //     ? false
+          //     : true
+          //   )
+          //}
         />
       );
     } else if (contentItem.type === "Int") {
@@ -1469,10 +1628,11 @@ export default (props) => {
           disabled={
             formType === "view" || contentItem.edit === false ? true : false
           }
-          style={{ width: "100%", height: 10 }}
-          defaultValue={section.type === "Doc" ? getSubDocFieldValue(section.name, contentItem.name) 
-          : (fieldValue[contentItem.name] !== undefined  ? fieldValue[contentItem.name] : "")
-          }
+          style={{ width: "100%", height: 10 }}          
+          defaultValue={getValue(contentItem.name, contentItem.type, section)}
+          // defaultValue={section.type === "Doc" ? getSubDocFieldValue(section.name, contentItem.name) 
+          // : (fieldValue[contentItem.name] !== undefined  ? fieldValue[contentItem.name] : "")
+          // }
           // value = {(fieldValue[contentItem.name] !== undefined) ? fieldValue[contentItem.name]: ""}
           onBlur={handleIntChange}
           name={contentItem.name}
@@ -1480,12 +1640,13 @@ export default (props) => {
         />
       );
     } else if (contentItem.type === "Float") {
-      console.log("FLOAT VAL", fieldValue[contentItem.name]);
+      // console.log("FLOAT VAL", fieldValue[contentItem.name]);
       return (
         <TextField
           name={contentItem.name}
           onBlur={handleFloatChange}
-          value={section.type === "Doc" ? getSubDocFieldValue(section.name, contentItem.name) : fieldValue[contentItem.name]}
+          value ={getValue(contentItem.name, contentItem.type, section)}
+          // value={section.type === "Doc" ? getSubDocFieldValue(section.name, contentItem.name) : fieldValue[contentItem.name]}
           style={{ width: "100%", height: 10 }}
           disabled={
             formType === "view" || contentItem.edit === false ? true : false
@@ -1498,11 +1659,12 @@ export default (props) => {
         <TextField
           type="date"
           name={contentItem.name}
-          onBlur={handleDateTimeChange}
+          onBlur={handleDateTimeChange} // YYYY=MM-DD
           style={{ width: "100%", height: 10 }}
-          defaultValue={ section.type === "Doc" ? parseDate(getSubDocFieldValue(section.name, contentItem.name)) 
-            : (fieldValue[contentItem.name] !== undefined ? parseDate(fieldValue[contentItem.name]) : "")
-          }
+          defaultValue={getValue(contentItem.name, contentItem.type, section)} // YYYY-DD-MM
+          // defaultValue={ section.type === "Doc" ? parseDate(getSubDocFieldValue(section.name, contentItem.name)) 
+          //   : (fieldValue[contentItem.name] !== undefined ? parseDate(fieldValue[contentItem.name]) : "")
+          // }
           disabled={
             formType === "view" || contentItem.edit === false ? true : false
           }
@@ -1512,6 +1674,38 @@ export default (props) => {
         />
       );
     }
+  }
+  function getValue(name, type, section){
+    let value = null
+    if(section.type === "Doc"){
+      value = getSubDocFieldValue(section.name, name)
+    }
+    else{
+      value = fieldValue[name]
+    }
+    if(type === "Text" || type === "Int" || type === "Float"){
+      if(value === undefined || value === null){
+        value = ""
+      }
+    }
+    else if(type === "Bool"){
+      if(value === false || value === null || value === undefined){
+        value = false 
+      }
+      else {
+        value = true
+      }
+    }
+    else if(type === "DateTime"){
+      if(value === null || value === "" || value === undefined){
+        value = ""
+      }
+      else {
+        value = parseDate(value)
+        // console.log("DD", value, fieldValue[name])
+      }
+    }
+    return value
   }
   function getSubDocFieldValue(subDocName, contentItemName) {
     try{

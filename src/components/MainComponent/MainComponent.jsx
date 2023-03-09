@@ -32,6 +32,10 @@ export default (props) => {
     props.userTask.taskType === "showApplicationForm" ||
     props.userTask.taskType === "showAppStateForm" ||
     props.userTask.taskType === "showAppStateSaveForm" ||
+    props.userTask.taskType === "showAppStateViewForm" ||    
+    props.userTask.taskType === "showFamMemberCreateForm" ||
+    props.userTask.taskType === "showLandPlotCreateForm" ||
+    props.userTask.taskType === "showIncomeCreateForm" ||    
     props.userTask.taskType === "showApplicationsGridForm" ||
     props.userTask.taskType === "showCloseMonthCreateParamForm" ||
     props.userTask.taskType === "showCloseMonthSearchParamForm" ||
