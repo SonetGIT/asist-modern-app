@@ -745,7 +745,8 @@ export default (props) => {
       console.log("openPerson:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "select") {
+    } 
+    else if (name === "select") {
       let attrs = {
         attributes: [{ name: "Person", type: "Doc", value: item.id }],
       };
@@ -766,7 +767,8 @@ export default (props) => {
       console.log("select:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "next") {
+    } 
+    else if (name === "next") {
       let application = getFieldValuesSaveDocument()
       let saveApp = {
         Application: application,
@@ -851,7 +853,7 @@ export default (props) => {
       console.log("saveFamMemDoc:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    }
+    }    
     else if (name === "createLandPlotDoc") 
     {
       // let docToSave = getFieldValuesSaveDocument();
@@ -879,6 +881,28 @@ export default (props) => {
         },
       };
       console.log("createLandPlotDoc:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "selectPersonLandPlot") {
+      let attrs = {
+        attributes: [{ name: "Person", type: "Doc", value: item.id }],
+      };
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "selectPersonLandPlot" },
+          selectedDoc: { value: JSON.stringify(attrs) },
+          docId: {value: item.id},
+          emptyDoc: { value: JSON.stringify({attributes: []}) },
+        },
+      };
+      console.log("selectPersonLandPlot:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
@@ -929,6 +953,28 @@ export default (props) => {
         },
       };
       console.log("createIncomeDoc:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "selectPersonIncome") {
+      let attrs = {
+        attributes: [{ name: "Person", type: "Doc", value: item.id }],
+      };
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "selectPersonIncome" },
+          selectedDoc: { value: JSON.stringify(attrs) },
+          docId: {value: item.id},
+          emptyDoc: { value: JSON.stringify({attributes: []}) },
+        },
+      };
+      console.log("selectPersonIncome:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
