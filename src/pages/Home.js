@@ -431,30 +431,54 @@ export default () => {
       } 
       else if (incomingJson.messageType === "toast") {
         if (incomingJson.toastType === "success") {
-          toast(incomingJson.toastText, {
-            position: "top-right",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
+          callSuccessToast(incomingJson.toastText, 3000)
+          // toast(incomingJson.toastText, {
+          //   position: "top-right",
+          //   autoClose: 3000,
+          //   hideProgressBar: false,
+          //   closeOnClick: true,
+          //   pauseOnHover: true,
+          //   draggable: true,
+          //   progress: undefined,
+          // });
         } else if (incomingJson.toastType === "error") {
-          toast.error(incomingJson.toastText, {
-            position: "top-right",
-            autoClose: 6000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
+          callErrorToast(incomingJson.toastText, 6000)
+          // toast.error(incomingJson.toastText, {
+          //   position: "top-right",
+          //   autoClose: 6000,
+          //   hideProgressBar: false,
+          //   closeOnClick: true,
+          //   pauseOnHover: true,
+          //   draggable: true,
+          //   progress: undefined,
+          // });
         }
       } else {
         console.log("Unknown RESTMessage", incomingJson);
       }
     };
+  }
+  function callSuccessToast(text, time){
+    toast(text, {
+      position: "top-right",
+      autoClose: time,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+  }
+  function callErrorToast(text, time){
+    toast.error(text, {
+      position: "top-right",
+      autoClose: 6000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
   }
 
   useEffect(() => {
@@ -1027,6 +1051,8 @@ export default () => {
                   handleCloseCurrentTab={handleCloseCurrentTab}
                   clearTabData={clearTabData}
                   mailRest={mailRest}
+                  callSuccessToast={callSuccessToast}
+                  callErrorToast={callErrorToast}
                 ></MainComponent>
               </TabPanel>
             ))}

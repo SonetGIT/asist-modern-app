@@ -29,7 +29,7 @@ import { green } from "@material-ui/core/colors";
 import { makeStyles } from "@material-ui/core/styles";
 import XLSX from "xlsx";
 var moment = require('moment'); // require
- 
+
 // Colors
 var crSnow = "#FFFAFA";
 var crBlack = "#000000";
@@ -134,6 +134,7 @@ export default (props) => {
   const [initialDocList, setInitialDocList] = useState(null);
 
   const [gridForm] = useState(props.userTask.gridForm);
+  const [gridFormEnumData] = useState(props.userTask.gridFormEnumData);
   const [gridFormButtons] = useState(props.userTask.gridFormButtons);
   const [tableFormButtons, setTableFormButtons] = useState([]);
   const [enumData] = useState(props.userTask.enumData);
@@ -358,6 +359,7 @@ export default (props) => {
             label: "Пусто",
             name: "DistrictId",
           };
+          console.log("ENUM SPR", updateSelectedOptions)
           setSelectedOptions(updateSelectedOptions);
           break;
         }
@@ -599,25 +601,25 @@ export default (props) => {
     };
     if (Form !== null && Form !== "null") {
       for (let s = 0; s < Form.sections.length; s++) {
-        if(Form.sections[s].type === "Doc"){
+        if (Form.sections[s].type === "Doc") {
           attrs.attributes.push({
             name: Form.sections[s].name,
             value: fieldValue[Form.sections[s].name],
             type: "Doc",
           });
         }
-        else{
+        else {
           for (let c = 0; c < Form.sections[s].contents.length; c++) {
             let name = Form.sections[s].contents[c].name;
             if (fieldValue[name] !== undefined) {
               attrs.attributes.push({
                 name: name,
                 value: fieldValue[name],
-                type: Form.sections[s].contents[c].type,
+                type: Form.sections[s].contents[c].type
               });
             }
           }
-        } 
+        }
       }
     }
     if (attrs.attributes.length === 0) {
@@ -651,24 +653,23 @@ export default (props) => {
   function checkForRequieredFields() {
     let checkedSuccessfuly = false;
     for (let s = 0; s < Form.sections.length; s++) {
-      for (let c = 0; c < Form.sections[s].contents.length; c++) {
-        let fieldName = Form.sections[s].contents[c].name;
-        if (
-          Form.sections[s].contents[c].required === true &&
-          (fieldValue[fieldName] === undefined ||
-            fieldValue[fieldName] === null ||
-            fieldValue[fieldName] === "NaN.NaN.NaN" ||
-            fieldValue[fieldName].length === 0)
-        ) {
-          checkedSuccessfuly = false;
-          swAllert(
-            'Внимание заполните поле "' +
-              Form.sections[s].contents[c].label +
-              '"'
-          );
-          break;
-        } else {
-          checkedSuccessfuly = true;
+      if (Form.sections[s].type === "Section") {
+        for (let c = 0; c < Form.sections[s].contents.length; c++) {
+          let fieldName = Form.sections[s].contents[c].name;
+          if (
+            Form.sections[s].contents[c].required === true &&
+            (fieldValue[fieldName] === undefined ||
+              fieldValue[fieldName] === null ||
+              fieldValue[fieldName] === "NaN.NaN.NaN" ||
+              fieldValue[fieldName].length === 0)
+          ) {
+            checkedSuccessfuly = false;
+            props.callErrorToast('Внимание заполните поле "' + Form.sections[s].contents[c].label + '"', 4000
+            );
+            break;
+          } else {
+            checkedSuccessfuly = true;
+          }
         }
       }
     }
@@ -745,7 +746,7 @@ export default (props) => {
       console.log("openPerson:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } 
+    }
     else if (name === "select") {
       let attrs = {
         attributes: [{ name: "Person", type: "Doc", value: item.id }],
@@ -760,14 +761,14 @@ export default (props) => {
         variables: {
           userAction: { value: "select" },
           selectedDoc: { value: JSON.stringify(attrs) },
-          docId: {value: item.id},
-          emptyDoc: { value: JSON.stringify({attributes: []}) },
+          docId: { value: item.id },
+          emptyDoc: { value: JSON.stringify({ attributes: [] }) },
         },
       };
       console.log("select:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } 
+    }
     else if (name === "next") {
       let application = getFieldValuesSaveDocument()
       let saveApp = {
@@ -775,11 +776,10 @@ export default (props) => {
         ApplicationState: null
       }
       let selDoc = getFieldValuesSaveDocument()
-      selDoc.attributes.push({name: "Application", type: "Doc", value: null})
+      selDoc.attributes.push({ name: "Application", type: "Doc", value: null })
       let personId = null;
-      for (let i = 0; i < selDoc.attributes.length; i++){
-        if(selDoc.attributes[i].name === "Person")
-        {
+      for (let i = 0; i < selDoc.attributes.length; i++) {
+        if (selDoc.attributes[i].name === "Person") {
           personId = selDoc.attributes[i].value;
           break;
         }
@@ -793,8 +793,8 @@ export default (props) => {
         userRole: userProfile.userRole,
         variables: {
           userAction: { value: "next" },
-          personId: {value: personId},
-          regDateRef: {value: moment(fieldValue.Date).format("YYYY-MM-DD")},
+          personId: { value: personId },
+          regDateRef: { value: moment(fieldValue.Date).format("YYYY-MM-DD") },
           application: { value: JSON.stringify(application) },
           saveApp: { value: JSON.stringify(saveApp) },
           selectedDoc: { value: JSON.stringify(selDoc) }
@@ -804,17 +804,15 @@ export default (props) => {
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
-    else if (name === "createFamMemDoc") 
-    {
+    else if (name === "createFamMemDoc") {
       // let docToSave = getFieldValuesSaveDocument();
       // console.log("docToSave:", docToSave);
       // let appState = {
       //   attributes: [],
       // };
       let appStateId = null
-      for (let i = 0; i < selectedDoc.attributes.length; i++){
-        if(selectedDoc.attributes[i].name === "Application_State")
-        {
+      for (let i = 0; i < selectedDoc.attributes.length; i++) {
+        if (selectedDoc.attributes[i].name === "Application_State") {
           appStateId = selectedDoc.attributes[i].value
         }
       }
@@ -834,8 +832,7 @@ export default (props) => {
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
-    else if (name === "saveFamMemDoc") 
-    {
+    else if (name === "saveFamMemDoc") {
       let docToSave = getFieldValuesSaveDocument();
       // console.log("docToSave:", docToSave);      
       let commandJson = {
@@ -853,18 +850,16 @@ export default (props) => {
       console.log("saveFamMemDoc:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    }    
-    else if (name === "createLandPlotDoc") 
-    {
+    }
+    else if (name === "createLandPlotDoc") {
       // let docToSave = getFieldValuesSaveDocument();
       // console.log("docToSave:", docToSave);
       // let appState = {
       //   attributes: [],
       // };
       let appStateId = null
-      for (let i = 0; i < selectedDoc.attributes.length; i++){
-        if(selectedDoc.attributes[i].name === "Application_State")
-        {
+      for (let i = 0; i < selectedDoc.attributes.length; i++) {
+        if (selectedDoc.attributes[i].name === "Application_State") {
           appStateId = selectedDoc.attributes[i].value
         }
       }
@@ -898,16 +893,15 @@ export default (props) => {
         variables: {
           userAction: { value: "selectPersonLandPlot" },
           selectedDoc: { value: JSON.stringify(attrs) },
-          docId: {value: item.id},
-          emptyDoc: { value: JSON.stringify({attributes: []}) },
+          docId: { value: item.id },
+          emptyDoc: { value: JSON.stringify({ attributes: [] }) },
         },
       };
       console.log("selectPersonLandPlot:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
-    else if (name === "saveLandPlotDoc") 
-    {
+    else if (name === "saveLandPlotDoc") {
       let docToSave = getFieldValuesSaveDocument();
       // console.log("docToSave:", docToSave);      
       let commandJson = {
@@ -926,17 +920,15 @@ export default (props) => {
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
-    else if (name === "createIncomeDoc") 
-    {
+    else if (name === "createIncomeDoc") {
       // let docToSave = getFieldValuesSaveDocument();
       // console.log("docToSave:", docToSave);
       // let appState = {
       //   attributes: [],
       // };
       let appStateId = null
-      for (let i = 0; i < selectedDoc.attributes.length; i++){
-        if(selectedDoc.attributes[i].name === "Application_State")
-        {
+      for (let i = 0; i < selectedDoc.attributes.length; i++) {
+        if (selectedDoc.attributes[i].name === "Application_State") {
           appStateId = selectedDoc.attributes[i].value
         }
       }
@@ -970,16 +962,15 @@ export default (props) => {
         variables: {
           userAction: { value: "selectPersonIncome" },
           selectedDoc: { value: JSON.stringify(attrs) },
-          docId: {value: item.id},
-          emptyDoc: { value: JSON.stringify({attributes: []}) },
+          docId: { value: item.id },
+          emptyDoc: { value: JSON.stringify({ attributes: [] }) },
         },
       };
       console.log("selectPersonIncome:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
-    else if (name === "saveIncomeDoc") 
-    {
+    else if (name === "saveIncomeDoc") {
       let docToSave = getFieldValuesSaveDocument();
       // console.log("docToSave:", docToSave);      
       let commandJson = {
@@ -998,16 +989,37 @@ export default (props) => {
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
-    else if (name === "saveAppStateDoc") 
-    {
+    else if (name === "calcKON") {
+      let appStateId = null
+      for (let i = 0; i < selectedDoc.attributes.length; i++) {
+        if (selectedDoc.attributes[i].name === "Application_State") {
+          appStateId = selectedDoc.attributes[i].value
+        }
+      }
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "calcKON" },
+          appStateId: { value: appStateId },
+        },
+      };
+      console.log("calcKON:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "saveAppStateDoc") {
       let docToSave = getFieldValuesSaveDocument();
       // console.log("docToSave:", docToSave);
       let appState = {
         attributes: [],
       };
-      for (let i = 0; i < docToSave.attributes.length; i++){
-        if(docToSave.attributes[i].name !== "Application")
-        {
+      for (let i = 0; i < docToSave.attributes.length; i++) {
+        if (docToSave.attributes[i].name !== "Application") {
           appState.attributes.push(docToSave.attributes[i])
         }
       }
@@ -1026,9 +1038,8 @@ export default (props) => {
       console.log("saveAppStateDoc:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    }    
-    else if (name === "filterClMonthDocList") 
-    {
+    }
+    else if (name === "filterClMonthDocList") {
       let filterDoc = getFieldValuesFilterDocuments();
       let commandJson = {
         commandType: "completeTask",
@@ -1457,29 +1468,32 @@ export default (props) => {
       sendFieldValues(commandJson);
       // swAllert("Данные успешно обновлены!", "success")
       clearTabData(process_id);
-    } 
-    else if (name === "saveDocument") 
-    {
-      let docToSave = getFieldValuesSaveDocument();
+    }
+    else if (name === "saveDocument") {
+      let result = checkForRequieredFields()
+      if (result === true) {
+        let docToSave = getFieldValuesSaveDocument();
 
-      let commandJson = {
-        commandType: "completeTask",
-        session_id: session_id,
-        process_id: process_id,
-        taskID: taskID,
-        userId: userProfile.userId,
-        userRole: userProfile.userRole,
-        variables: {
-          userAction: { value: "saveDocument" },
-          document: { value: JSON.stringify(docToSave) },
-          emptyDoc: { value: JSON.stringify({attributes: []}) },
-        },
-      };
-      console.log("saveDocument:", commandJson);
-      sendFieldValues(commandJson);
-      //swAllert("Данные сохранены!", "success")
-      clearTabData(process_id);
-    } 
+        let commandJson = {
+          commandType: "completeTask",
+          session_id: session_id,
+          process_id: process_id,
+          taskID: taskID,
+          userId: userProfile.userId,
+          userRole: userProfile.userRole,
+          variables: {
+            userAction: { value: "saveDocument" },
+            document: { value: JSON.stringify(docToSave) },
+            emptyDoc: { value: JSON.stringify({ attributes: [] }) },
+          },
+        };
+        console.log("saveDocument:", commandJson);
+        sendFieldValues(commandJson);
+        //swAllert("Данные сохранены!", "success")
+        clearTabData(process_id);
+      }
+
+    }
     else if (name === "back") {
       let commandJson = {
         commandType: "completeTask",
@@ -1547,11 +1561,71 @@ export default (props) => {
   }
   // Create body of each section and call contentBuilder function
   function bodyBuilder(section) {
+    // console.log("S", section)
     return (
       <table>
         <tbody>
-          {section.contents.map(
-            (contentItem) =>
+          {section.type === "Doc" ?
+            section.sections.map(sectionItem => (
+              // sectionBuilder(sectionItem)
+              <>
+                <table width="100%">
+                  <thead>
+                    <tr>
+                      <td
+                        style={{
+                          width: "100%",
+                          color: crSnow,
+                          fontSize: 16,
+                          textAlign: "center",
+                          textShadow: "1px 1px black",
+                          fontFamily: "Courier",
+                          backgroundColor: crGreen,
+                          borderTopLeftRadius: 10,
+                          borderTopRightRadius: 10,
+                          // wordWrap: "break-word",
+                        }}
+                      >
+                        {sectionItem.label}
+
+                      </td>
+                    </tr>
+                  </thead>
+                </table>
+                <table width="100%">
+                  {
+                    sectionItem.contents.map(cItem => {
+                      let sItem = sectionItem
+                      sItem.type = "Doc"
+                      sItem.name = section.name
+                      if (cItem.show === true) {
+                        return (
+                          <tr>
+                            <td
+                              style={{
+                                width: "40%",
+                                color: crBlue,
+                                fontSize: 14,
+                                fontFamily: "Courier",
+                              }}
+                            >
+                              {cItem.label}
+                            </td>
+                            <td style={{ width: "60%" }}>
+                              {contentBuilder(cItem, sItem)}
+                            </td>
+                          </tr>
+                        )
+                      }
+                    })
+                  }
+                </table>
+
+              </>
+
+            ))
+            :
+            section.contents.map((contentItem) =>
               contentItem.show === true && (
                 <tr>
                   <td
@@ -1569,15 +1643,14 @@ export default (props) => {
                   </td>
                 </tr>
               )
-          )}
+            )
+          }
         </tbody>
       </table>
     );
   }
   // Creating components by it's type
   function contentBuilder(contentItem, section) {
-    // if(contentItem.show === true)
-    // }
     if (contentItem.type === "Text") {
       return (
         <TextField
@@ -1590,13 +1663,11 @@ export default (props) => {
             formType === "view" || contentItem.edit === false ? true : false
           }
           onBlur={handleChange}
-          defaultValue={getValue(contentItem.name, contentItem.type, section)
-          //   section.type === "Doc" ? getSubDocFieldValue(section.name, contentItem.name) 
-          // : fieldValue[contentItem.name] ? fieldValue[contentItem.name] : ""
-          }
+          defaultValue={getValue(contentItem.name, contentItem.type, section)}
         />
       );
-    } else if (contentItem.type === "Enum") {
+    }
+    else if (contentItem.type === "Enum") {
       let selectedOption = {
         value: "",
         label: "Пусто",
@@ -1604,10 +1675,12 @@ export default (props) => {
       };
       let fieldVal = null
 
-      if(section.type === "Doc"){
+      if (section.type === "Doc") {
+        // console.log("EN DOC", section.name, contentItem)
         fieldVal = getSubDocFieldValue(section.name, contentItem.name)
       }
-      else {fieldVal = fieldValue[contentItem.name]}
+      else { fieldVal = fieldValue[contentItem.name] }
+
       if (fieldVal !== undefined) {
         for (let i = 0; i < enumOptions[contentItem.name].length; i++) {
           if (fieldVal === enumOptions[contentItem.name][i].value) {
@@ -1616,13 +1689,6 @@ export default (props) => {
           }
         }
       }
-      // if (selectedOptions.length !== 0) {
-      //   for (let i = 0; i < selectedOptions.length; i++) {
-      //     if (contentItem.name === selectedOptions[i].name) {
-      //       selectedOption = selectedOptions[i];
-      //     }
-      //   }
-      // }
       return (
         <Select
           name={contentItem.name}
@@ -1632,7 +1698,8 @@ export default (props) => {
           isDisabled={formType === "view" || contentItem.edit === false ? true : false}
         />
       );
-    } else if (contentItem.type === "Bool") {
+    }
+    else if (contentItem.type === "Bool") {
       return (
         <Checkbox
           style={{
@@ -1648,51 +1715,32 @@ export default (props) => {
           disabled={
             formType === "view" || contentItem.edit === false ? true : false
           }
-          checked = {getValue(contentItem.name, contentItem.type, section)}
-          // checked={section.type === "Doc" ? 
-          // (
-          //   getSubDocFieldValue(section.name, contentItem.name) === false ||
-          //   getSubDocFieldValue(section.name, contentItem.name) === null ||
-          //   getSubDocFieldValue(section.name, contentItem.name) === undefined
-          //   ? false
-          //   : true
-          // ) 
-          // : 
-          // (
-          //   fieldValue[contentItem.name] === false ||
-          //   fieldValue[contentItem.name] === null ||
-          //   fieldValue[contentItem.name] === undefined
-          //     ? false
-          //     : true
-          //   )
-          //}
+          checked={getValue(contentItem.name, contentItem.type, section)}
         />
       );
-    } else if (contentItem.type === "Int") {
+    }
+    else if (contentItem.type === "Int") {
       return (
         <TextField
           disabled={
             formType === "view" || contentItem.edit === false ? true : false
           }
-          style={{ width: "100%", height: 10 }}          
+          style={{ width: "100%", height: 10 }}
           defaultValue={getValue(contentItem.name, contentItem.type, section)}
-          // defaultValue={section.type === "Doc" ? getSubDocFieldValue(section.name, contentItem.name) 
-          // : (fieldValue[contentItem.name] !== undefined  ? fieldValue[contentItem.name] : "")
-          // }
           // value = {(fieldValue[contentItem.name] !== undefined) ? fieldValue[contentItem.name]: ""}
           onBlur={handleIntChange}
           name={contentItem.name}
           InputProps={{ inputComponent: IntegerFormat }}
         />
       );
-    } else if (contentItem.type === "Float") {
+    }
+    else if (contentItem.type === "Float") {
       // console.log("FLOAT VAL", fieldValue[contentItem.name]);
       return (
         <TextField
           name={contentItem.name}
           onBlur={handleFloatChange}
-          value ={getValue(contentItem.name, contentItem.type, section)}
-          // value={section.type === "Doc" ? getSubDocFieldValue(section.name, contentItem.name) : fieldValue[contentItem.name]}
+          value={getValue(contentItem.name, contentItem.type, section)}
           style={{ width: "100%", height: 10 }}
           disabled={
             formType === "view" || contentItem.edit === false ? true : false
@@ -1700,7 +1748,8 @@ export default (props) => {
           InputProps={{ inputComponent: FloatFormat }}
         />
       );
-    } else if (contentItem.type === "DateTime") {
+    }
+    else if (contentItem.type === "DateTime") {
       return (
         <TextField
           type="date"
@@ -1708,9 +1757,6 @@ export default (props) => {
           onBlur={handleDateTimeChange} // YYYY=MM-DD
           style={{ width: "100%", height: 10 }}
           defaultValue={getValue(contentItem.name, contentItem.type, section)} // YYYY-DD-MM
-          // defaultValue={ section.type === "Doc" ? parseDate(getSubDocFieldValue(section.name, contentItem.name)) 
-          //   : (fieldValue[contentItem.name] !== undefined ? parseDate(fieldValue[contentItem.name]) : "")
-          // }
           disabled={
             formType === "view" || contentItem.edit === false ? true : false
           }
@@ -1721,29 +1767,29 @@ export default (props) => {
       );
     }
   }
-  function getValue(name, type, section){
+  function getValue(name, type, section) {
     let value = null
-    if(section.type === "Doc"){
+    if (section.type === "Doc") {
       value = getSubDocFieldValue(section.name, name)
     }
-    else{
+    else {
       value = fieldValue[name]
     }
-    if(type === "Text" || type === "Int" || type === "Float"){
-      if(value === undefined || value === null){
+    if (type === "Text" || type === "Int" || type === "Float") {
+      if (value === undefined || value === null) {
         value = ""
       }
     }
-    else if(type === "Bool"){
-      if(value === false || value === null || value === undefined){
-        value = false 
+    else if (type === "Bool") {
+      if (value === false || value === null || value === undefined) {
+        value = false
       }
       else {
         value = true
       }
     }
-    else if(type === "DateTime"){
-      if(value === null || value === "" || value === undefined){
+    else if (type === "DateTime") {
+      if (value === null || value === "" || value === undefined) {
         value = ""
       }
       else {
@@ -1754,61 +1800,74 @@ export default (props) => {
     return value
   }
   function getSubDocFieldValue(subDocName, contentItemName) {
-    try{
+    try {
       for (let i = 0; i < subDocuments[subDocName].attributes.length; i++) {
         if (subDocuments[subDocName].attributes[i].name === contentItemName) {
           return subDocuments[subDocName].attributes[i].value;
         }
       }
     }
-    catch(er){return null}
+    catch (er) { return null }
   }
   // Create grid form components
   function getGridFormItems(attribute, formItem) {
     // console.log("ITEM", attribute, formItem)
     if (formItem.type === "Text") {
-      if (
-        attribute.value === null ||
-        attribute.value === "" ||
-        attribute.value === undefined
-      ) {
+      if (attribute.value === null || attribute.value === "" || attribute.value === undefined) {
         return (
           <td
-            align="center"
-            style={{ color: crBlack, fontSize: 13, fontFamily: "Courier" }}
+            align="center" style={{ color: crBlack, fontSize: 13, fontFamily: "Courier" }}
           >
             -
           </td>
         );
-      } else {
+      }
+      else {
         return <td>{attribute.value}</td>;
       }
-    } else if (formItem.type === "DateTime") {
-      if (
-        attribute.value === null ||
-        attribute.value === "" ||
-        attribute.value === undefined
-      ) {
+    }
+    else if (formItem.type === "Enum") {
+      if (attribute.value === null || attribute.value === "" || attribute.value === undefined) {
         return (
           <td
-            align="center"
-            style={{ color: crBlack, fontSize: 13, fontFamily: "Courier" }}
+            align="center" style={{ color: crBlack, fontSize: 13, fontFamily: "Courier" }}
           >
             -
           </td>
         );
-      } else {
+      }
+      else {
+        // console.log("ENUM", attribute.name, attribute.value, attribute.type)
+        for (let i = 0; i < gridFormEnumData.length; i++) {
+          if (attribute.name === gridFormEnumData[i].name) {
+            for (let l = 0; l < gridFormEnumData[i].data.length; l++) {
+              if (gridFormEnumData[i].data[l].id === attribute.value) {
+                return gridFormEnumData[i].data[l].label
+              }
+            }
+          }
+        }
+      }
+    }
+    else if (formItem.type === "DateTime") {
+      if (attribute.value === null || attribute.value === "" || attribute.value === undefined) {
+        return (
+          <td
+            align="center" style={{ color: crBlack, fontSize: 13, fontFamily: "Courier" }}
+          >
+            -
+          </td>
+        );
+      }
+      else {
         // console.log("ITEM", dataItem, value)
         let dateRev = attribute.value.substring(0, 10);
         let date = moment(dateRev).format("DD-MM-YYYY");
         return date;
       }
-    } else if (formItem.type === "Float") {
-      if (
-        attribute.value === null ||
-        attribute.value === "" ||
-        attribute.value === undefined
-      ) {
+    }
+    else if (formItem.type === "Float") {
+      if (attribute.value === null || attribute.value === "" || attribute.value === undefined) {
         return (
           <td
             align="center"
@@ -1818,19 +1877,17 @@ export default (props) => {
       } else {
         return <td>{parseFloat(attribute.value).toFixed(2)}</td>;
       }
-    } else if (formItem.type === "Int") {
-      if (
-        attribute.value === null ||
-        attribute.value === "" ||
-        attribute.value === undefined
-      ) {
+    }
+    else if (formItem.type === "Int") {
+      if (attribute.value === null || attribute.value === "" || attribute.value === undefined) {
         return (
           <td
             align="center"
             style={{ color: crBlack, fontSize: 13, fontFamily: "Courier" }}
           ></td>
         );
-      } else {
+      }
+      else {
         return <td>{attribute.value}</td>;
       }
     }

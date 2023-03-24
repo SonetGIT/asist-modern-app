@@ -32,10 +32,10 @@ export default (props) => {
     props.userTask.taskType === "showApplicationForm" ||
     props.userTask.taskType === "showAppStateForm" ||
     props.userTask.taskType === "showAppStateSaveForm" ||
-    props.userTask.taskType === "showAppStateViewForm" ||    
+    props.userTask.taskType === "showAppStateViewForm" ||
     props.userTask.taskType === "showFamMemberCreateForm" ||
     props.userTask.taskType === "showLandPlotCreateForm" ||
-    props.userTask.taskType === "showIncomeCreateForm" ||    
+    props.userTask.taskType === "showIncomeCreateForm" ||
     props.userTask.taskType === "showApplicationsGridForm" ||
     props.userTask.taskType === "showCloseMonthCreateParamForm" ||
     props.userTask.taskType === "showCloseMonthSearchParamForm" ||
@@ -65,6 +65,8 @@ export default (props) => {
         sendFieldValues={sendFieldValues}
         clearTabData={clearTabData}
         handleCloseCurrentTab={handleCloseCurrentTab}
+        callSuccessToast={props.callSuccessToast}
+        callErrorToast={props.callErrorToast}
       ></MainForm>
     );
   } else if (props.userTask.taskType === "showRegistersForPaymentDistrForm1") {
