@@ -1565,7 +1565,28 @@ export default (props) => {
     return (
       <table>
         <tbody>
-          {section.type === "Doc" ?
+          {section.type === "Section" &&
+            section.contents.map((contentItem) =>
+              contentItem.show === true && (
+                <tr>
+                  <td
+                    style={{
+                      width: "40%",
+                      color: crBlue,
+                      fontSize: 14,
+                      fontFamily: "Courier",
+                    }}
+                  >
+                    {contentItem.label}
+                  </td>
+                  <td style={{ width: "60%" }}>
+                    {contentBuilder(contentItem, section)}
+                  </td>
+                </tr>
+              )
+            )
+          }
+          {section.type === "Doc" &&
             section.sections.map(sectionItem => (
               // sectionBuilder(sectionItem)
               <>
@@ -1620,31 +1641,86 @@ export default (props) => {
                     })
                   }
                 </table>
-
               </>
-
             ))
-            :
-            section.contents.map((contentItem) =>
-              contentItem.show === true && (
-                <tr>
-                  <td
-                    style={{
-                      width: "40%",
-                      color: crBlue,
-                      fontSize: 14,
-                      fontFamily: "Courier",
-                    }}
-                  >
-                    {contentItem.label}
-                  </td>
-                  <td style={{ width: "60%" }}>
-                    {contentBuilder(contentItem, section)}
-                  </td>
-                </tr>
-              )
-            )
           }
+          {section.type === "DocList" &&
+
+            <table
+              // id={gridTableId}
+              size="auto"
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+              }}
+            >
+              <thead
+                size="auto"
+                style={{
+                  backgroundColor: crGreen,
+                }}
+              >
+                <tr>
+                  {section.sections.map((sectionItem) => {
+                    return (
+                      <td
+                        colSpan={sectionItem.contents.length}
+                        style={{
+                          fontSize: 16,
+                          color: crSnow,
+                          textAlign: "center",
+                          fontFamily: "Courier",
+                          border: "0.5px solid #3a666c",
+                        }}
+                      >
+                        {sectionItem.label}
+                      </td>
+                    )
+                  })}
+                </tr>
+                {/* <tr>
+                  {gridFormButtons !== null &&
+                    gridFormButtons.length > 0 && (
+                      <td
+                        rowSpan="2"
+                        key={"action"}
+                        style={{
+                          color: crSnow,
+                          padding: 7,
+                          minWidth: 70,
+                          fontSize: 14,
+                          textAlign: "center",
+                          fontFamily: "Courier",
+                          border: "0.5px solid #3a666c",
+                        }}
+                      >
+                        Действие
+                      </td>
+                    )}
+                  {gridForm.sections.map((section) =>
+                    section.contents.map((contentItem) => {
+                      return (
+                        <td
+                          rowSpan="2"
+                          style={{
+                            color: crSnow,
+                            padding: 7,
+                            fontSize: 14,
+                            textAlign: "center",
+                            fontFamily: "Courier",
+                            border: "0.5px solid #3a666c",
+                          }}
+                        >
+                          {contentItem.label}
+                        </td>
+                      );
+                    })
+                  )}
+                </tr> */}
+              </thead>
+            </table>
+          }
+
         </tbody>
       </table>
     );

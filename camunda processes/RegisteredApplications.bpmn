@@ -15,7 +15,7 @@
 execution.setVariable("buttons", "null")
 execution.setVariable("tableFormButtons",
 "null")
-execution.setVariable("gridFormButtons", "ApplicationsGridForm")
+execution.setVariable("gridFormButtons", "null")
 execution.setVariable("formDefId", "73322bb1-657a-4ecb-a93c-ff45583ad29d")
 execution.setVariable("gridFormDefId", "3cfe159a-e59c-4788-88d1-0a91971a6841")
 execution.setVariable("userAction", "null")
