@@ -127,6 +127,7 @@ export default (props) => {
   const [Form, setForm] = useState(props.userTask.Form);
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [subDocuments, setSubDocuments] = useState({});
+  const [subDocList, setSubDocList] = useState({});
   const [docId, setDocId] = useState(props.userTask.docId);
   const [formType] = useState(props.userTask.formType);
   const [docList, setDocList] = useState(null);
@@ -197,6 +198,13 @@ export default (props) => {
       props.userTask.subDocuments !== null
     ) {
       setSubDocuments(props.userTask.subDocuments);
+    }
+    if (
+      props.userTask.subDocList !== "null" &&
+      props.userTask.subDocList !== undefined &&
+      props.userTask.subDocList !== null
+    ) {
+      setSubDocList(props.userTask.subDocList);
     }
     if (
       props.userTask.tableFormButtons !== "null" &&
@@ -1562,6 +1570,11 @@ export default (props) => {
   // Create body of each section and call contentBuilder function
   function bodyBuilder(section) {
     // console.log("S", section)
+    // let subDocL = null
+    // if (section.type === "DocList") {
+    //   subDocL = subDocList[section.name]
+    // }
+    // console.log("SBD", subDocL)
     return (
       <table>
         <tbody>
@@ -1608,7 +1621,6 @@ export default (props) => {
                         }}
                       >
                         {sectionItem.label}
-
                       </td>
                     </tr>
                   </thead>
@@ -1645,7 +1657,6 @@ export default (props) => {
             ))
           }
           {section.type === "DocList" &&
-
             <table
               // id={gridTableId}
               size="auto"
@@ -1678,49 +1689,58 @@ export default (props) => {
                     )
                   })}
                 </tr>
-                {/* <tr>
-                  {gridFormButtons !== null &&
-                    gridFormButtons.length > 0 && (
+                {section.sections.map((section) =>
+                  section.contents.map((contentItem) => {
+                    return (
                       <td
                         rowSpan="2"
-                        key={"action"}
                         style={{
                           color: crSnow,
                           padding: 7,
-                          minWidth: 70,
                           fontSize: 14,
                           textAlign: "center",
                           fontFamily: "Courier",
                           border: "0.5px solid #3a666c",
                         }}
                       >
-                        Действие
+                        {contentItem.label}
                       </td>
-                    )}
-                  {gridForm.sections.map((section) =>
-                    section.contents.map((contentItem) => {
-                      return (
-                        <td
-                          rowSpan="2"
-                          style={{
-                            color: crSnow,
-                            padding: 7,
-                            fontSize: 14,
-                            textAlign: "center",
-                            fontFamily: "Courier",
-                            border: "0.5px solid #3a666c",
-                          }}
-                        >
-                          {contentItem.label}
-                        </td>
-                      );
-                    })
-                  )}
-                </tr> */}
+                    );
+                  })
+                )}
               </thead>
+              <tbody>
+                {/* {Object.keys(subDocL).length !== 0 && */}
+                {subDocList[section.name].documents.map((dataItem) => (
+                  <tr style={{ height: 35 }}>
+                    {section.sections.map((sectionItem) => {
+                      return sectionItem.contents.map((contentItem) => {
+                        for (let a = 0; a < dataItem.attributes.length; a++) {
+                          if (dataItem.attributes[a].name === contentItem.name) {
+                            return (
+                              <td
+                                style={{
+                                  fontSize: 12,
+                                  color: crBlack,
+                                  minWidth: "70px",
+                                  textAlign: "left",
+                                  fontFamily: "Courier",
+                                  borderTop: "0.5px solid #a6a6a6",
+                                }}
+                              >
+                                {/* {dataItem.attributes[a].name} */}
+                                {getGridFormItems(dataItem.attributes[a], contentItem)}
+                              </td>
+                            )
+                          }
+                        }
+                      })
+                    })}
+                  </tr>
+                ))}
+              </tbody>
             </table>
           }
-
         </tbody>
       </table>
     );
@@ -2065,11 +2085,7 @@ export default (props) => {
           {/* Create grid table with data from doclist */}
           {gridForm !== null && (
             <Grid container direction="row" justify="flex-start" spacing={0}>
-              <Paper
-                style={{
-                  boxShadow: "0 1px 15px 0 #919191",
-                }}
-              >
+              <Paper style={{ boxShadow: "0 1px 15px 0 #919191" }}>
                 <table
                   id={gridTableId}
                   size="auto"
