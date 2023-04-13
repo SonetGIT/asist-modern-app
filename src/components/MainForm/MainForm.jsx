@@ -738,7 +738,8 @@ export default (props) => {
       console.log("findDocument:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "openPerson") {
+    }
+    else if (name === "openPerson") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -784,6 +785,7 @@ export default (props) => {
         ApplicationState: null
       }
       let selDoc = getFieldValuesSaveDocument()
+      // console.log("TEST:", selDoc)
       selDoc.attributes.push({ name: "Application", type: "Doc", value: null })
       let personId = null;
       for (let i = 0; i < selDoc.attributes.length; i++) {
@@ -808,16 +810,11 @@ export default (props) => {
           selectedDoc: { value: JSON.stringify(selDoc) }
         },
       };
-      console.log("next:", commandJson);
+      console.log("next:", application);
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
     else if (name === "createFamMemDoc") {
-      // let docToSave = getFieldValuesSaveDocument();
-      // console.log("docToSave:", docToSave);
-      // let appState = {
-      //   attributes: [],
-      // };
       let appStateId = null
       for (let i = 0; i < selectedDoc.attributes.length; i++) {
         if (selectedDoc.attributes[i].name === "Application_State") {
@@ -860,11 +857,6 @@ export default (props) => {
       clearTabData(process_id);
     }
     else if (name === "createLandPlotDoc") {
-      // let docToSave = getFieldValuesSaveDocument();
-      // console.log("docToSave:", docToSave);
-      // let appState = {
-      //   attributes: [],
-      // };
       let appStateId = null
       for (let i = 0; i < selectedDoc.attributes.length; i++) {
         if (selectedDoc.attributes[i].name === "Application_State") {
@@ -929,17 +921,16 @@ export default (props) => {
       clearTabData(process_id);
     }
     else if (name === "createIncomeDoc") {
-      // let docToSave = getFieldValuesSaveDocument();
-      // console.log("docToSave:", docToSave);
-      // let appState = {
+      // let documents = {
       //   attributes: [],
       // };
-      let appStateId = null
-      for (let i = 0; i < selectedDoc.attributes.length; i++) {
-        if (selectedDoc.attributes[i].name === "Application_State") {
-          appStateId = selectedDoc.attributes[i].value
-        }
-      }
+      // let appStateId = null
+      // for (let i = 0; i < selectedDoc.attributes.length; i++) {
+      //   if (selectedDoc.attributes[i].name === "Application_State") {
+      //     appStateId = selectedDoc.attributes[i].value
+      //   }
+      // } Старая версия
+
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -949,7 +940,8 @@ export default (props) => {
         userRole: userProfile.userRole,
         variables: {
           userAction: { value: "createIncomeDoc" },
-          appStateId: { value: appStateId },
+          // appStateId: { value: appStateId },
+          appStateId: { value: selectedDoc.id },
         },
       };
       console.log("createIncomeDoc:", commandJson);
@@ -1535,7 +1527,7 @@ export default (props) => {
     //   console.log("ERR", er)
     //   return "NaN.NaN.NaN";
     // }
-    let newDate = moment(date).format("YYYY-MM-DD")
+    let newDate = moment(date, 'DD-MM-YYYY').format("YYYY-MM-DD")
     // console.log("CDATE", newDate)
     return newDate
   }
@@ -1801,10 +1793,7 @@ export default (props) => {
           style={{
             maxWidth: 20,
             height: 10,
-            color:
-              formType === "view" || contentItem.edit === false
-                ? "#37474f"
-                : "grey",
+            color: formType === "view" || contentItem.edit === false ? "#37474f" : "grey",
           }}
           name={contentItem.name}
           onChange={handleCheckboxChange}
@@ -1877,7 +1866,7 @@ export default (props) => {
       }
     }
     else if (type === "Bool") {
-      if (value === false || value === null || value === undefined) {
+      if (value === false || value === null || value === undefined || value === "False") {
         value = false
       }
       else {
@@ -1890,7 +1879,7 @@ export default (props) => {
       }
       else {
         value = parseDate(value)
-        // console.log("DD", value, fieldValue[name])
+        // console.log("DD", value, name,)
       }
     }
     return value
@@ -1956,10 +1945,8 @@ export default (props) => {
         );
       }
       else {
-        // console.log("ITEM", dataItem, value)
         let dateRev = attribute.value.substring(0, 10);
-        let date = moment(dateRev).format("DD-MM-YYYY");
-        return date;
+        return dateRev;
       }
     }
     else if (formItem.type === "Float") {
@@ -1986,6 +1973,20 @@ export default (props) => {
       else {
         return <td>{attribute.value}</td>;
       }
+    }
+    else if (formItem.type === "Bool") {
+      // return <td>{attribute.value}</td>;
+      let val = true
+      if (attribute.value === false || attribute.value === null || attribute.value === undefined || attribute.value === "False") {
+        val = false
+      }
+      return (
+        <Checkbox
+          style={{ maxWidth: 20, height: 15, color: val === false ? "red" : "green" }}
+          name={formItem.name}
+          checked={val}
+        />
+      );
     }
   }
   // console.log("FIELDS", fieldValue)
