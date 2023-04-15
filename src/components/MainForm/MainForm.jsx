@@ -1702,34 +1702,34 @@ export default (props) => {
                 )}
               </thead>
               <tbody>
-                {/* {Object.keys(subDocL).length !== 0 && */}
-                {subDocList[section.name].documents.map((dataItem) => (
-                  <tr style={{ height: 35 }}>
-                    {section.sections.map((sectionItem) => {
-                      return sectionItem.contents.map((contentItem) => {
-                        for (let a = 0; a < dataItem.attributes.length; a++) {
-                          if (dataItem.attributes[a].name === contentItem.name) {
-                            return (
-                              <td
-                                style={{
-                                  fontSize: 12,
-                                  color: crBlack,
-                                  minWidth: "70px",
-                                  textAlign: "left",
-                                  fontFamily: "Courier",
-                                  borderTop: "0.5px solid #a6a6a6",
-                                }}
-                              >
-                                {/* {dataItem.attributes[a].name} */}
-                                {getGridFormItems(dataItem.attributes[a], contentItem)}
-                              </td>
-                            )
+                {Object.keys(subDocList).length !== 0 &&
+                  subDocList[section.name].documents.map((dataItem) => (
+                    <tr style={{ height: 35 }}>
+                      {section.sections.map((sectionItem) => {
+                        return sectionItem.contents.map((contentItem) => {
+                          for (let a = 0; a < dataItem.attributes.length; a++) {
+                            if (dataItem.attributes[a].name === contentItem.name) {
+                              return (
+                                <td
+                                  style={{
+                                    fontSize: 12,
+                                    color: crBlack,
+                                    minWidth: "70px",
+                                    textAlign: "left",
+                                    fontFamily: "Courier",
+                                    borderTop: "0.5px solid #a6a6a6",
+                                  }}
+                                >
+                                  {/* {dataItem.attributes[a].name} */}
+                                  {getGridFormItems(dataItem.attributes[a], contentItem)}
+                                </td>
+                              )
+                            }
                           }
-                        }
-                      })
-                    })}
-                  </tr>
-                ))}
+                        })
+                      })}
+                    </tr>
+                  ))}
               </tbody>
             </table>
           }
@@ -1982,7 +1982,7 @@ export default (props) => {
       }
       return (
         <Checkbox
-          style={{ maxWidth: 20, height: 15, color: val === false ? "red" : "green" }}
+          style={{ maxWidth: 20, height: 15, color: val === false ? "#37474f" : "grey" }}
           name={formItem.name}
           checked={val}
         />
