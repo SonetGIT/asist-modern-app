@@ -857,12 +857,12 @@ export default (props) => {
       clearTabData(process_id);
     }
     else if (name === "createLandPlotDoc") {
-      let appStateId = null
+      /*let appStateId = null
       for (let i = 0; i < selectedDoc.attributes.length; i++) {
         if (selectedDoc.attributes[i].name === "Application_State") {
           appStateId = selectedDoc.attributes[i].value
         }
-      }
+      }*/
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -872,7 +872,7 @@ export default (props) => {
         userRole: userProfile.userRole,
         variables: {
           userAction: { value: "createLandPlotDoc" },
-          appStateId: { value: appStateId },
+          appStateId: { value: selectedDoc.id },
         },
       };
       console.log("createLandPlotDoc:", commandJson);
@@ -986,6 +986,24 @@ export default (props) => {
         },
       };
       console.log("saveIncomeDoc:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "createTrusteePerson") {
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "createTrusteePerson" },
+          // appStateId: { value: appStateId },
+          appStateId: { value: selectedDoc.id },
+        },
+      };
+      console.log("createTrusteePerson:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
