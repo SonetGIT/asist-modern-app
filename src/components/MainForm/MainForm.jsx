@@ -40,6 +40,7 @@ var crSnowGrey = "#dfe0e1"; //светло серый
 var TableToExcel = require("table-to-excel");
 var tableToExcel = new TableToExcel();
 var generator = require("generate-password");
+var request = require("request-promise");
 
 function FloatFormat(props) {
   const { inputRef, onChange, ...other } = props;
@@ -152,6 +153,7 @@ export default (props) => {
   const [taskType] = useState(props.userTask.taskType);
   const [gridTableId, setGridTableId] = useState(null);
   const [buttonFilesId, setbuttonFilesId] = useState(null);
+
 
   // Set data from props to state of component
   useEffect(() => {
@@ -716,7 +718,8 @@ export default (props) => {
     }
   }
   /***USER_ACTION - действие пользователя***********************************************************************************************/
-  async function buttonClick(name, item) {
+  async function buttonClick(name, item, selectedDoc, userId) {
+    console.log("BTN:", item.id, selectedDoc.id, userId)
     if (name === "findDocument") {
       let filterDoc = getFieldValuesFilterDocuments();
 
@@ -920,6 +923,41 @@ export default (props) => {
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
+    else if (name === "deleteLP") {
+      swal({
+        text: "Вы уверены?",
+        icon: "warning",
+        buttons: { yes: "Удалить", no: "Отмена" }
+      })
+        .then(async function (click) {
+          if (click === "yes") {
+            console.log("CLICK", click)
+            await request({
+              // ASIST-MODERN-API/api/Document/DeleteLandAndPlot?appStateId=350987bb-d369-421f-adc7-9745e651c5fa&landAndPlotId=2597ff80-0445-4330-b7d8-4b8b22c1af46&userId=E0F19306-AECE-477B-B110-3AD09323DD2D
+              headers: { "content-type": "application/json" },
+              // url: "http://192.168.2.150/ASIST-MODERN-API/api/Document/DeleteLandAndPlot?appStateId=350987bb-d369-421f-adc7-9745e651c5fa&landAndPlotId=2597ff80-0445-4330-b7d8-4b8b22c1af46&userId=E0F19306-AECE-477B-B110-3AD09323DD2D",
+              url: "http://192.168.2.150/ASIST-MODERN-API/api/Document/DeleteLandAndPlot?appStateId=" + selectedDoc.id + "&landAndPlotId=" + item.id + "&userId=" + userId,
+              // url: "http://192.168.2.150/ASIST-MODERN-API/api/Document/DeleteLandAndPlotPerson/" + selDoc.attributes[i].value + "?userId=" + userId,
+              // + "&userId=" + userId,
+              //item.id = landAndPlotId
+              // appStateId = selectedDoc.id
+              json: true,
+              method: "GET",
+            })
+              // .then (function (response){
+              //   //console.log("RESPONSE", JSON.parse(response))
+              // })
+              .catch(function (error) {
+                return console.log("Request error: ", error)
+              })
+            // fetchUsers()
+            // setButtons(Buttons[userRole].SearchUserButtons)
+            // setFieldValue({ enabled: true, OrgId: userOrgId, userRole: "candidate" })
+            // updateSOP(userOrgId, "candidate")
+            // setForm(SearchUserForm)
+          }
+        })
+    }
     else if (name === "createIncomeDoc") {
       // let documents = {
       //   attributes: [],
@@ -1004,6 +1042,25 @@ export default (props) => {
         },
       };
       console.log("createTrusteePerson:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "saveTrusteePerson") {
+      let docToSave = getFieldValuesSaveDocument();
+      // console.log("docToSave:", docToSave);      
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "saveTrusteePerson" },
+          document: { value: JSON.stringify(docToSave) },
+        },
+      };
+      console.log("saveTrusteePerson:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
@@ -1675,13 +1732,23 @@ export default (props) => {
                 borderCollapse: "collapse",
               }}
             >
-              <thead
-                size="auto"
-                style={{
-                  backgroundColor: crGreen,
-                }}
-              >
+              <thead size="auto" style={{ backgroundColor: "#FF0000" }}>
                 <tr>
+                  <td
+                    rowSpan="2"
+                    key={"action"}
+                    style={{
+                      color: crSnow,
+                      padding: 7,
+                      minWidth: 70,
+                      fontSize: 14,
+                      textAlign: "center",
+                      fontFamily: "Courier",
+                      border: "0.5px solid #3a666c",
+                    }}
+                  >
+                    Действие
+                  </td>
                   {section.sections.map((sectionItem) => {
                     return (
                       <td
@@ -1699,30 +1766,68 @@ export default (props) => {
                     )
                   })}
                 </tr>
-                {section.sections.map((section) =>
-                  section.contents.map((contentItem) => {
-                    return (
-                      <td
-                        rowSpan="2"
-                        style={{
-                          color: crSnow,
-                          padding: 7,
-                          fontSize: 14,
-                          textAlign: "center",
-                          fontFamily: "Courier",
-                          border: "0.5px solid #3a666c",
-                        }}
-                      >
-                        {contentItem.label}
-                      </td>
-                    );
-                  })
-                )}
+                {/*  */}
+                <tr>
+                  {section.sections.map((section) =>
+                    section.contents.map((contentItem) => {
+                      return (
+                        <td
+                          rowSpan="2"
+                          style={{
+                            color: crSnow,
+                            padding: 7,
+                            fontSize: 14,
+                            textAlign: "center",
+                            fontFamily: "Courier",
+                            border: "0.5px solid #3a666c",
+                          }}
+                        >
+                          {contentItem.label}
+                        </td>
+                      );
+                    })
+                  )}
+                </tr>
               </thead>
               <tbody>
                 {Object.keys(subDocList).length !== 0 &&
                   subDocList[section.name].documents.map((dataItem) => (
                     <tr style={{ height: 35 }}>
+                      {subDocList[section.name].buttons !== null &&
+                        subDocList[section.name].buttons.length > 0 && (
+                          <td
+                            style={{
+                              maxWidth: 34,
+                              textAlign: "center",
+                            }}
+                          >
+                            {subDocList[section.name].buttons !== "null" &&
+                              subDocList[section.name].buttons.map((button) => (
+                                <Button
+                                  key={button.name}
+                                  name={button.name}
+                                  value={button.name}
+                                  onClick={() =>
+                                    buttonClick(button.name, dataItem, selectedDoc, userProfile.userId)
+                                  }
+                                  style={{
+                                    height: 20,
+                                    fontSize: 10,
+                                    maxWidth: 36,
+                                    marginTop: 4,
+                                    marginBottom: 4,
+                                    fontWeight: "bold",
+                                    fontFamily: "Courier",
+                                    color: crSnowBlue,
+                                    backgroundColor: crSnow,
+                                    border: "1px solid #2d838d", //crSnowBlue
+                                  }}
+                                >
+                                  {button.label}
+                                </Button>
+                              ))}
+                          </td>
+                        )}
                       {section.sections.map((sectionItem) => {
                         return sectionItem.contents.map((contentItem) => {
                           for (let a = 0; a < dataItem.attributes.length; a++) {
@@ -1731,7 +1836,7 @@ export default (props) => {
                                 <td
                                   style={{
                                     fontSize: 12,
-                                    color: crBlack,
+                                    color: crGreen,
                                     minWidth: "70px",
                                     textAlign: "left",
                                     fontFamily: "Courier",
@@ -2113,12 +2218,7 @@ export default (props) => {
                     borderCollapse: "collapse",
                   }}
                 >
-                  <thead
-                    size="auto"
-                    style={{
-                      backgroundColor: crGreen,
-                    }}
-                  >
+                  <thead size="auto" style={{ backgroundColor: crGreen }}>
                     <tr>
                       {gridFormButtons !== null && (
                         <td
