@@ -1,6 +1,6 @@
 const proxy = require('http-proxy-middleware');
 console.log('proxy')
-module.exports = function(app) {
+module.exports = function (app) {
   // app.use(
   //   '/dep',
   //   proxy({
@@ -9,9 +9,9 @@ module.exports = function(app) {
   //   })
   // );
   app.use(
-    '/jasperserver',
+    '/api',
     proxy({
-      target: 'http://192.168.2.150:8080',
+      target: 'http://192.168.2.150/ASIST-MODERN-API',
       changeOrigin: true,
     })
   );

@@ -259,11 +259,11 @@ execution.setVariable("selectedDoc", "null")</bpmn:script>
       <bpmn:incoming>Flow_0ob0dnz</bpmn:incoming>
       <bpmn:outgoing>Flow_0pjy3qj</bpmn:outgoing>
       <bpmn:script>execution.setVariable("totalCount", 10)
-/*var newTotalCount = DocList.prop("totalCount").toString();
+var newTotalCount = DocList.prop("totalCount").toString();
 execution.setVariable("totalCount", newTotalCount)
 
 var docList = DocList.prop("items").toString();
-execution.setVariable("docList", docList)*/</bpmn:script>
+execution.setVariable("docList", docList)*</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_1r6lvop" name="paginationClick" sourceRef="Gateway_0yg1s6j" targetRef="Activity_1q0k252">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">#{userAction == "paginationClick"}</bpmn:conditionExpression>
@@ -273,7 +273,7 @@ execution.setVariable("docList", docList)*/</bpmn:script>
         <camunda:connector>
           <camunda:inputOutput>
             <camunda:inputParameter name="payload">${searchBody}</camunda:inputParameter>
-            <camunda:inputParameter name="url">${asistRESTApi}/ASIST-MODERN-API/api/Document/FilterApplicationsByStateId?size=${size}&amp;page=${page}&amp;userId=${userId}&amp;stateTypeId=F062290E-42E3-4E24-8547-9FA7606547D7</camunda:inputParameter>
+            <camunda:inputParameter name="url">${asistRESTApi}/ASIST-MODERN-API/api/Document/FilterApplicationsByStateId?size=${size}&amp;page=${page}&amp;userId=${userId}&amp;stateTypeId=${stateTypeId}</camunda:inputParameter>
             <camunda:inputParameter name="method">POST</camunda:inputParameter>
             <camunda:inputParameter name="headers">
               <camunda:map>

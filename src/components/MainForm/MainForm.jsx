@@ -153,7 +153,7 @@ export default (props) => {
   const [taskType] = useState(props.userTask.taskType);
   const [gridTableId, setGridTableId] = useState(null);
   const [buttonFilesId, setbuttonFilesId] = useState(null);
-
+  const [subDocListPages, setSubDocListPages] = useState(null);
 
   // Set data from props to state of component
   useEffect(() => {
@@ -167,6 +167,7 @@ export default (props) => {
       setPage(parseInt(props.userTask.page));
       setTotalCount(parseInt(props.userTask.totalCount));
       setGridTableId(getUUID());
+
       // setFilteredDocList(parsedData)
       // setInitialDocList(parsedData)
       // filterDocList(0, parseInt(props.userTask.size)-1, parsedData)
@@ -174,7 +175,8 @@ export default (props) => {
     if (
       props.userTask.selectedDoc !== "null" &&
       props.userTask.selectedDoc !== undefined &&
-      props.userTask.selectedDoc !== null
+      props.userTask.selectedDoc !== null &&
+      props.userTask.selectedDoc !== "{}"
     ) {
       let parsedSelectedDoc = JSON.parse(props.userTask.selectedDoc);
       let fields = {};
@@ -207,6 +209,14 @@ export default (props) => {
       props.userTask.subDocList !== null
     ) {
       setSubDocList(props.userTask.subDocList);
+      let pages = {};
+      for (let s = 0; s < Form.sections.length; s++) {
+        if (Form.sections[s].type === "DocList") {
+          pages[Form.sections[s].name] = 1
+        }
+      }
+      setSubDocListPages(pages)
+      console.log("PG:", pages)
     }
     if (
       props.userTask.tableFormButtons !== "null" &&
@@ -453,7 +463,8 @@ export default (props) => {
   }
   function handleDateTimeChange(event) {
     // let convertedDate = getCurrentFullDateTime(event.target.value);
-    let convertedDate = moment(event.target.value).format("YYYY-MM-DD")
+    // let convertedDate = moment(event.target.value).format("YYYY-MM-DD")
+    let convertedDate = moment(event.target.value).format("DD-MM-YYYY HH:MM:SS")
     fieldValue[event.target.name] = convertedDate;
     setFieldValue(fieldValue);
     // console.log("DATE CHANGE", event.target.value)
@@ -480,7 +491,6 @@ export default (props) => {
       fullDate + " " + hours + ":" + minutes + ":" + seconds + offsetInHours;
     return convertedDate;
   }
-
   // Functions from props
   function sendFieldValues(commandJson) {
     props.sendFieldValues(commandJson);
@@ -489,6 +499,55 @@ export default (props) => {
     props.clearTabData(process_id);
   }
   /****************************************************************************************************************************************************/
+  //DocList Переход на первую страницу/Pagination functions
+  function DocListKeyboardArrowFirstClick() {
+    if (page !== 1) {
+      setPage(1);
+      let filterDoc = getFieldValuesFilterDocuments();
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "paginationClick" },
+          searchBody: { value: JSON.stringify(filterDoc) },
+          size: { value: size },
+          page: { value: page - page + 1 },
+        },
+      };
+      console.log("paginationClick:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    } else {
+      setSnackBarMessage("Вы на первой странице!");
+      setShowSnackBar(true);
+    }
+  }
+  //DocList Переход налево
+  function DocListKeyboardArrowLeftClick(name) {
+    if (subDocListPages[name] === 1) {
+      setSnackBarMessage("Вы на первой странице!");
+      setShowSnackBar(true);
+    }
+    else {
+      setSubDocListPages({ ...subDocListPages, [name]: subDocListPages[name] - 1 })
+      console.log("NEW PAGE", subDocListPages[name] - 1)
+    }
+  }
+  //DocList Переход направо
+  function DocListKeyboardArrowRightClick(name) {
+    if (subDocList.length < subDocListPages[name] + 1) {
+      setSnackBarMessage("Больше нет данных!");
+      setShowSnackBar(true);
+    }
+    else {
+      setSubDocListPages({ ...subDocListPages, [name]: subDocListPages[name] + 1 })
+      console.log("NEW PAGE", subDocListPages[name] + 1)
+    }
+  }
   //Переход на первую страницу/Pagination functions
   function KeyboardArrowFirstClick() {
     if (page !== 1) {
@@ -619,14 +678,20 @@ export default (props) => {
           });
         }
         else {
-          for (let c = 0; c < Form.sections[s].contents.length; c++) {
-            let name = Form.sections[s].contents[c].name;
-            if (fieldValue[name] !== undefined) {
-              attrs.attributes.push({
-                name: name,
-                value: fieldValue[name],
-                type: Form.sections[s].contents[c].type
-              });
+          if (Form.sections[s].type !== "DocList") {
+            for (let c = 0; c < Form.sections[s].contents.length; c++) {
+              let name = Form.sections[s].contents[c].name;
+              if (fieldValue[name] !== undefined) {
+                let val = fieldValue[name]
+                if (Form.sections[s].contents[c].type === "DateTime") {
+                  val = moment(val).format("DD-MM-YYYY HH:MM:SS")
+                }
+                attrs.attributes.push({
+                  name: name,
+                  value: fieldValue[name],
+                  type: Form.sections[s].contents[c].type
+                });
+              }
             }
           }
         }
@@ -639,17 +704,14 @@ export default (props) => {
     }
   }
   // Collect data to update doc
-  function getFieldValuesUpdateDocument() {
+  function getFieldValuesUpdateDocument() { //Нужно переделать на структуру ФЕЕКШИГЕУЫ
     let docToUpdate = {};
     docToUpdate["created_at"] = selectedDoc.created_at;
     docToUpdate["id"] = parseInt(docId);
     for (let s = 0; s < Form.sections.length; s++) {
       for (let c = 0; c < Form.sections[s].contents.length; c++) {
         let fieldName = Form.sections[s].contents[c].name;
-        if (
-          Form.sections[s].contents[c].type === "Bool" &&
-          (fieldValue[fieldName] === undefined ||
-            fieldValue[fieldName] === null)
+        if (Form.sections[s].contents[c].type === "Bool" && (fieldValue[fieldName] === undefined || fieldValue[fieldName] === null)
         ) {
           docToUpdate[fieldName] = false;
         } else {
@@ -659,7 +721,6 @@ export default (props) => {
     }
     return docToUpdate;
   }
-
   function checkForRequieredFields() {
     let checkedSuccessfuly = false;
     for (let s = 0; s < Form.sections.length; s++) {
@@ -699,12 +760,17 @@ export default (props) => {
               fieldValue[name] !== undefined &&
               fieldValue[name] !== null &&
               fieldValue[name] !== "" &&
-              fieldValue[name] !== "NaN.NaN.NaN"
+              fieldValue[name] !== "NaN.NaN.NaN" &&
+              fieldValue[name] !== "Invalid date"
             ) {
+              let val = fieldValue[name]
+              if (Form.sections[s].contents[c].type === "DateTime") {
+                val = val.substring(0, 10)// moment(val).format("DD-MM-YYYY")
+              }
               attrs.attributes.push({
                 name: name,
-                value: fieldValue[name],
-                type: Form.sections[s].contents[c].type,
+                value: val,
+                type: Form.sections[s].contents[c].type
               });
             }
           }
@@ -718,8 +784,8 @@ export default (props) => {
     }
   }
   /***USER_ACTION - действие пользователя***********************************************************************************************/
-  async function buttonClick(name, item, selectedDoc, userId) {
-    console.log("BTN:", item.id, selectedDoc.id, userId)
+  async function buttonClick(name, item) {
+    // console.log("BTN:", item.id, selectedDoc.id, userId)
     if (name === "findDocument") {
       let filterDoc = getFieldValuesFilterDocuments();
 
@@ -781,65 +847,8 @@ export default (props) => {
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
-    else if (name === "next") {
-      let application = getFieldValuesSaveDocument()
-      let saveApp = {
-        Application: application,
-        ApplicationState: null
-      }
-      let selDoc = getFieldValuesSaveDocument()
-      // console.log("TEST:", selDoc)
-      selDoc.attributes.push({ name: "Application", type: "Doc", value: null })
-      let personId = null;
-      for (let i = 0; i < selDoc.attributes.length; i++) {
-        if (selDoc.attributes[i].name === "Person") {
-          personId = selDoc.attributes[i].value;
-          break;
-        }
-      }
-      let commandJson = {
-        commandType: "completeTask",
-        session_id: session_id,
-        process_id: process_id,
-        taskID: taskID,
-        userId: userProfile.userId,
-        userRole: userProfile.userRole,
-        variables: {
-          userAction: { value: "next" },
-          personId: { value: personId },
-          regDateRef: { value: moment(fieldValue.Date).format("YYYY-MM-DD") },
-          application: { value: JSON.stringify(application) },
-          saveApp: { value: JSON.stringify(saveApp) },
-          selectedDoc: { value: JSON.stringify(selDoc) }
-        },
-      };
-      console.log("next:", application);
-      sendFieldValues(commandJson);
-      clearTabData(process_id);
-    }
-    else if (name === "createFamMemDoc") {
-      let appStateId = null
-      for (let i = 0; i < selectedDoc.attributes.length; i++) {
-        if (selectedDoc.attributes[i].name === "Application_State") {
-          appStateId = selectedDoc.attributes[i].value
-        }
-      }
-      let commandJson = {
-        commandType: "completeTask",
-        session_id: session_id,
-        process_id: process_id,
-        taskID: taskID,
-        userId: userProfile.userId,
-        userRole: userProfile.userRole,
-        variables: {
-          userAction: { value: "createFamMemDoc" },
-          appStateId: { value: appStateId },
-        },
-      };
-      console.log("createFamMemDoc:", commandJson);
-      sendFieldValues(commandJson);
-      clearTabData(process_id);
-    }
+
+
     else if (name === "saveFamMemDoc") {
       let docToSave = getFieldValuesSaveDocument();
       // console.log("docToSave:", docToSave);      
@@ -858,6 +867,39 @@ export default (props) => {
       console.log("saveFamMemDoc:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
+    }
+    else if (name === "deleteFM") {
+      const commandJson =
+      {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "deleteFM" },
+          appStateId: { value: selectedDoc.id },
+          familyMemberId: { value: item.id }
+        }
+      }
+      swal({
+        text: "Вы точно хотите удалить эту запись?",
+        icon: "warning",
+        buttons: { yes: "Да", no: "Нет" },
+        dangerMode: true,
+      })
+        .then((click) => {
+          if (click === "yes") {
+            sendFieldValues(commandJson)
+            swAllert("Член семьи удален!", "success")
+            clearTabData(process_id)
+            console.log("button deleteFM:", commandJson, item)
+          }
+          else {
+            console.log("CLICK_deleteFM", click)
+          }
+        })
     }
     else if (name === "createLandPlotDoc") {
       /*let appStateId = null
@@ -924,51 +966,40 @@ export default (props) => {
       clearTabData(process_id);
     }
     else if (name === "deleteLP") {
+      const commandJson =
+      {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "deleteLP" },
+          appStateId: { value: selectedDoc.id },
+          landAndPlotId: { value: item.id }
+        }
+      }
+      // console.log("button deleteLP: ", commandJson)
       swal({
-        text: "Вы уверены?",
+        text: "Вы точно хотите удалить эту запись?",
         icon: "warning",
-        buttons: { yes: "Удалить", no: "Отмена" }
+        buttons: { yes: "Да", no: "Нет" },
+        dangerMode: true,
       })
-        .then(async function (click) {
+        .then((click) => {
           if (click === "yes") {
-            console.log("CLICK", click)
-            await request({
-              // ASIST-MODERN-API/api/Document/DeleteLandAndPlot?appStateId=350987bb-d369-421f-adc7-9745e651c5fa&landAndPlotId=2597ff80-0445-4330-b7d8-4b8b22c1af46&userId=E0F19306-AECE-477B-B110-3AD09323DD2D
-              headers: { "content-type": "application/json" },
-              // url: "http://192.168.2.150/ASIST-MODERN-API/api/Document/DeleteLandAndPlot?appStateId=350987bb-d369-421f-adc7-9745e651c5fa&landAndPlotId=2597ff80-0445-4330-b7d8-4b8b22c1af46&userId=E0F19306-AECE-477B-B110-3AD09323DD2D",
-              url: "http://192.168.2.150/ASIST-MODERN-API/api/Document/DeleteLandAndPlot?appStateId=" + selectedDoc.id + "&landAndPlotId=" + item.id + "&userId=" + userId,
-              // url: "http://192.168.2.150/ASIST-MODERN-API/api/Document/DeleteLandAndPlotPerson/" + selDoc.attributes[i].value + "?userId=" + userId,
-              // + "&userId=" + userId,
-              //item.id = landAndPlotId
-              // appStateId = selectedDoc.id
-              json: true,
-              method: "GET",
-            })
-              // .then (function (response){
-              //   //console.log("RESPONSE", JSON.parse(response))
-              // })
-              .catch(function (error) {
-                return console.log("Request error: ", error)
-              })
-            // fetchUsers()
-            // setButtons(Buttons[userRole].SearchUserButtons)
-            // setFieldValue({ enabled: true, OrgId: userOrgId, userRole: "candidate" })
-            // updateSOP(userOrgId, "candidate")
-            // setForm(SearchUserForm)
+            sendFieldValues(commandJson)
+            swAllert("Земельный участок удален!", "success")
+            clearTabData(process_id)
+            console.log("button deleteLP:", commandJson, item)
+          }
+          else {
+            console.log("CLICK_deleteLP", click)
           }
         })
     }
     else if (name === "createIncomeDoc") {
-      // let documents = {
-      //   attributes: [],
-      // };
-      // let appStateId = null
-      // for (let i = 0; i < selectedDoc.attributes.length; i++) {
-      //   if (selectedDoc.attributes[i].name === "Application_State") {
-      //     appStateId = selectedDoc.attributes[i].value
-      //   }
-      // } Старая версия
-
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1026,6 +1057,39 @@ export default (props) => {
       console.log("saveIncomeDoc:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
+    }
+    else if (name === "deleteIncome") {
+      const commandJson =
+      {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "deleteIncome" },
+          appStateId: { value: selectedDoc.id },
+          incomeId: { value: item.id }
+        }
+      }
+      swal({
+        text: "Вы точно хотите удалить эту запись?",
+        icon: "warning",
+        buttons: { yes: "Да", no: "Нет" },
+        dangerMode: true,
+      })
+        .then((click) => {
+          if (click === "yes") {
+            sendFieldValues(commandJson)
+            swAllert("Доход удален!", "success")
+            clearTabData(process_id)
+            console.log("button deleteIncome:", commandJson, item)
+          }
+          else {
+            console.log("CLICK_deleteIncome", click)
+          }
+        })
     }
     else if (name === "createTrusteePerson") {
       let commandJson = {
@@ -1087,6 +1151,42 @@ export default (props) => {
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
+    else if (name === "next") {
+      let application = getFieldValuesSaveDocument()
+      let saveApp = {
+        Application: application,
+        ApplicationState: null
+      }
+      let selDoc = getFieldValuesSaveDocument()
+      // console.log("TEST:", selDoc)
+      selDoc.attributes.push({ name: "Application", type: "Doc", value: null })
+      let personId = null;
+      for (let i = 0; i < selDoc.attributes.length; i++) {
+        if (selDoc.attributes[i].name === "Person") {
+          personId = selDoc.attributes[i].value;
+          break;
+        }
+      }
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "next" },
+          personId: { value: personId },
+          regDateRef: { value: moment(fieldValue.Date).format("YYYY-MM-DD") },
+          application: { value: JSON.stringify(application) },
+          saveApp: { value: JSON.stringify(saveApp) },
+          selectedDoc: { value: JSON.stringify(selDoc) }
+        },
+      };
+      console.log("next:", application);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
     else if (name === "saveAppStateDoc") {
       let docToSave = getFieldValuesSaveDocument();
       // console.log("docToSave:", docToSave);
@@ -1107,12 +1207,102 @@ export default (props) => {
         userRole: userProfile.userRole,
         variables: {
           userAction: { value: "saveAppStateDoc" },
-          document: { value: JSON.stringify(appState) },
+          appState: { value: JSON.stringify(appState) },
+          selectedDoc: { value: JSON.stringify(docToSave) }
         },
       };
       console.log("saveAppStateDoc:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
+    }
+    else if (name === "createFamMemDoc") {
+      let appStateId = null
+      for (let i = 0; i < selectedDoc.attributes.length; i++) {
+        if (selectedDoc.attributes[i].name === "Application_State") {
+          appStateId = selectedDoc.attributes[i].value
+        }
+      }
+      // if (appStateId === null) {
+      //   appStateId = selectedDoc.id
+      // }
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "createFamMemDoc" },
+          appStateId: { value: appStateId },
+        },
+      };
+      console.log("createFamMemDoc:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "refusState") {
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "refusState" },
+          docId: { value: selectedDoc.id },
+        },
+      };
+      console.log("SetStateRefuse:", docId);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+
+    }
+    else if (name === "dataMSE") {
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "dataMSE" },
+          docId: { value: selectedDoc.id },
+        },
+      };
+      console.log("dataMSE:", docId);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "printKON") {
+      console.log(docId);
+      let url = "/api/Document/DownloadKON?appId=" + selectedDoc.id + "&userId=" + userProfile.userId;
+      await fetch(
+        url,
+        {
+          mode: 'no-cors',
+          method: 'GET',
+          withCredentials: true,
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8'
+          }
+        }
+      )
+        .then(response => response.blob())
+        .then(blob => {
+          // console.log("RESP", blob)
+          var url = window.URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url;
+          a.download = `Печать таблицы КОН.xls`;
+          document.body.appendChild(a); // we need to append the element to the dom -> otherwise it will not work in firefox
+          a.click();
+          a.remove();  //afterwards we remove the element again         
+        })
+        .catch(error => console.error(error));
     }
     else if (name === "filterClMonthDocList") {
       let filterDoc = getFieldValuesFilterDocuments();
@@ -1134,7 +1324,8 @@ export default (props) => {
       console.log("filterClMonthDocList:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "createClosedMonthList") {
+    }
+    else if (name === "createClosedMonthList") {
       let filterDoc = getFieldValuesFilterDocuments();
       let commandJson = {
         commandType: "completeTask",
@@ -1153,7 +1344,8 @@ export default (props) => {
       console.log("createClosedMonthList:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "completeCloseMonth") {
+    }
+    else if (name === "completeCloseMonth") {
       let filterDoc = getFieldValuesFilterDocuments();
       let commandJson = {
         commandType: "completeTask",
@@ -1170,7 +1362,8 @@ export default (props) => {
       console.log("completeCloseMonth:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "openClMonthDocList") {
+    }
+    else if (name === "openClMonthDocList") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1186,7 +1379,8 @@ export default (props) => {
       console.log("openClMonthDocList:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "openBankAccountGetList") {
+    }
+    else if (name === "openBankAccountGetList") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1202,7 +1396,8 @@ export default (props) => {
       console.log("openBankAccountGetList:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "openBankAccountGetList") {
+    }
+    else if (name === "openBankAccountGetList") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1218,7 +1413,8 @@ export default (props) => {
       console.log("openBankAccountGetList:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "downloadAccToExcel") {
+    }
+    else if (name === "downloadAccToExcel") {
       console.log(docId);
       let url =
         "http://192.168.0.54/ASIST-MODERN-API/api/OpenBankAccount/DistrictRegistryToExcel?docId=" +
@@ -1291,7 +1487,8 @@ export default (props) => {
       // }
       // console.log("downloadAccToExcel:", commandJson)
       // sendFieldValues(commandJson)
-    } else if (name === "openBankAccountGetGrid") {
+    }
+    else if (name === "openBankAccountGetGrid") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1307,7 +1504,8 @@ export default (props) => {
       console.log("openBankAccountGetGrid:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "openBankAccDistrRegister") {
+    }
+    else if (name === "openBankAccDistrRegister") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1323,7 +1521,8 @@ export default (props) => {
       console.log("openBankAccDistrRegister:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "completeBankAccount") {
+    }
+    else if (name === "completeBankAccount") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1338,7 +1537,8 @@ export default (props) => {
       console.log("completeBankAccount:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "openUploadGetList") {
+    }
+    else if (name === "openUploadGetList") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1354,7 +1554,8 @@ export default (props) => {
       console.log("openUploadGetList:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "openPayRegisterGetList") {
+    }
+    else if (name === "openPayRegisterGetList") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1370,7 +1571,8 @@ export default (props) => {
       console.log("openPayRegisterGetList:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "openRegDistrDetailForm") {
+    }
+    else if (name === "openRegDistrDetailForm") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1386,7 +1588,8 @@ export default (props) => {
       console.log("openRegDistrDetailForm:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "createPayRegPreview") {
+    }
+    else if (name === "createPayRegPreview") {
       let filterDoc = getFieldValuesFilterDocuments();
       let commandJson = {
         commandType: "completeTask",
@@ -1405,7 +1608,8 @@ export default (props) => {
       console.log("createPayRegPreview:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "openPreviewDocList") {
+    }
+    else if (name === "openPreviewDocList") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1422,7 +1626,8 @@ export default (props) => {
       console.log("button openPreviewDocList: ", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "completePreviewDocList") {
+    }
+    else if (name === "completePreviewDocList") {
       let filterDoc = getFieldValuesFilterDocuments();
       let commandJson = {
         commandType: "completeTask",
@@ -1438,9 +1643,11 @@ export default (props) => {
       console.log("completePreviewDocList:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "downloadToExcel") {
+    }
+    else if (name === "downloadToExcel") {
       tableToExcel.render(gridTableId);
-    } else if (name === "sendFile") {
+    }
+    else if (name === "sendFile") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1457,7 +1664,8 @@ export default (props) => {
       console.log("sendFile:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "createDocument") {
+    }
+    else if (name === "createDocument") {
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1472,7 +1680,8 @@ export default (props) => {
       console.log(":", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "cancel") {
+    }
+    else if (name === "cancel") {
       const commandJson = {
         commandType: "completeTask",
         process_id: process_id,
@@ -1487,7 +1696,8 @@ export default (props) => {
       console.log("button cancel: ", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "openDocument") {
+    }
+    else if (name === "openDocument") {
       // console.log("ITEM", item)
       let commandJson = {
         commandType: "completeTask",
@@ -1505,7 +1715,8 @@ export default (props) => {
       console.log("button openDocument: ", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "openReferenceDocument") {
+    }
+    else if (name === "openReferenceDocument") {
       // console.log("ITEM", item)
       let commandJson = {
         commandType: "completeTask",
@@ -1525,7 +1736,8 @@ export default (props) => {
       console.log("button openReferenceDocument: ", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else if (name === "updateDocument") {
+    }
+    else if (name === "updateDocument") {
       let updateBody = getFieldValuesUpdateDocument();
       let commandJson = {
         commandType: "completeTask",
@@ -1540,9 +1752,9 @@ export default (props) => {
         },
       };
       console.log("updateDocument:", commandJson);
-      sendFieldValues(commandJson);
-      // swAllert("Данные успешно обновлены!", "success")
-      clearTabData(process_id);
+      // sendFieldValues(commandJson);
+      // // swAllert("Данные успешно обновлены!", "success")
+      // clearTabData(process_id);
     }
     else if (name === "saveDocument") {
       let result = checkForRequieredFields()
@@ -1564,7 +1776,6 @@ export default (props) => {
         };
         console.log("saveDocument:", commandJson);
         sendFieldValues(commandJson);
-        //swAllert("Данные сохранены!", "success")
         clearTabData(process_id);
       }
 
@@ -1584,26 +1795,19 @@ export default (props) => {
       console.log("button back:", commandJson);
       sendFieldValues(commandJson);
       clearTabData(process_id);
-    } else {
+    }
+    else {
       console.log("UNKNOWN Button ", name);
     }
   }
   // Convert date to approptiate format
   function parseDate(date) {
-    // try {
-    //   var newDate = new Date(date); // "2020-01-26"
-    //   var dd = String(newDate.getDate()).padStart(2, "0");
-    //   var mm = String(newDate.getMonth() + 1).padStart(2, "0"); //January is 0!
-    //   var yyyy = newDate.getFullYear();
-    //   var convertedDate = yyyy + "-" + dd + "-" + mm;
-    //    console.log("CDATE", convertedDate)
-    //   return convertedDate;
-    // } catch (er) {
-    //   console.log("ERR", er)
-    //   return "NaN.NaN.NaN";
-    // }
+
     let newDate = moment(date, 'DD-MM-YYYY').format("YYYY-MM-DD")
-    // console.log("CDATE", newDate)
+    // let newDate = moment(new Date(date)).format("YYYY-MM-DD")
+
+    // let newDate = date.substring(0, 10);
+    // console.log("CDATE", date, newDate)
     return newDate
   }
   // Create sections with labels and call bodyBuilder function
@@ -1724,137 +1928,207 @@ export default (props) => {
             ))
           }
           {section.type === "DocList" &&
-            <table
-              // id={gridTableId}
-              size="auto"
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-              }}
-            >
-              <thead size="auto" style={{ backgroundColor: "#FF0000" }}>
-                <tr>
-                  <td
-                    rowSpan="2"
-                    key={"action"}
-                    style={{
-                      color: crSnow,
-                      padding: 7,
-                      minWidth: 70,
-                      fontSize: 14,
-                      textAlign: "center",
-                      fontFamily: "Courier",
-                      border: "0.5px solid #3a666c",
-                    }}
-                  >
-                    Действие
-                  </td>
-                  {section.sections.map((sectionItem) => {
-                    return (
-                      <td
-                        colSpan={sectionItem.contents.length}
-                        style={{
-                          fontSize: 16,
-                          color: crSnow,
-                          textAlign: "center",
-                          fontFamily: "Courier",
-                          border: "0.5px solid #3a666c",
-                        }}
-                      >
-                        {sectionItem.label}
-                      </td>
-                    )
-                  })}
-                </tr>
-                {/*  */}
-                <tr>
-                  {section.sections.map((section) =>
-                    section.contents.map((contentItem) => {
+            <Grid>
+              <table
+                // id={gridTableId}
+                size="auto"
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                }}
+              >
+                <thead size="auto" style={{ backgroundColor: crGreen }}>
+                  <tr>
+                    {/* {subDocList[section.name].buttons !== "null" &&
+                      subDocList[section.name].buttons.length > 0 && ( */}
+                    <td
+                      rowSpan="2"
+                      key={"action"}
+                      style={{
+                        color: crSnow,
+                        padding: 7,
+                        minWidth: 70,
+                        fontSize: 14,
+                        textAlign: "center",
+                        fontFamily: "Courier",
+                        border: "0.5px solid #3a666c",
+                      }}
+                    >
+                      Действие
+                    </td>
+                    {/* )} */}
+                    {section.sections.map((sectionItem) => {
                       return (
                         <td
-                          rowSpan="2"
+                          colSpan={sectionItem.contents.length}
                           style={{
+                            fontSize: 16,
                             color: crSnow,
-                            padding: 7,
-                            fontSize: 14,
                             textAlign: "center",
                             fontFamily: "Courier",
                             border: "0.5px solid #3a666c",
                           }}
                         >
-                          {contentItem.label}
+                          {sectionItem.label}
                         </td>
-                      );
-                    })
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {Object.keys(subDocList).length !== 0 &&
-                  subDocList[section.name].documents.map((dataItem) => (
-                    <tr style={{ height: 35 }}>
-                      {subDocList[section.name].buttons !== null &&
-                        subDocList[section.name].buttons.length > 0 && (
+                      )
+                    })}
+                  </tr>
+                  {/*  */}
+                  <tr>
+                    {section.sections.map((section) =>
+                      section.contents.map((contentItem) => {
+                        return (
                           <td
+                            rowSpan="2"
                             style={{
-                              maxWidth: 34,
+                              color: crSnow,
+                              padding: 7,
+                              fontSize: 14,
                               textAlign: "center",
+                              fontFamily: "Courier",
+                              border: "0.5px solid #3a666c",
                             }}
                           >
-                            {subDocList[section.name].buttons !== "null" &&
-                              subDocList[section.name].buttons.map((button) => (
-                                <Button
-                                  key={button.name}
-                                  name={button.name}
-                                  value={button.name}
-                                  onClick={() =>
-                                    buttonClick(button.name, dataItem, selectedDoc, userProfile.userId)
-                                  }
-                                  style={{
-                                    height: 20,
-                                    fontSize: 10,
-                                    maxWidth: 36,
-                                    marginTop: 4,
-                                    marginBottom: 4,
-                                    fontWeight: "bold",
-                                    fontFamily: "Courier",
-                                    color: crSnowBlue,
-                                    backgroundColor: crSnow,
-                                    border: "1px solid #2d838d", //crSnowBlue
-                                  }}
-                                >
-                                  {button.label}
-                                </Button>
-                              ))}
+                            {contentItem.label}
                           </td>
-                        )}
-                      {section.sections.map((sectionItem) => {
-                        return sectionItem.contents.map((contentItem) => {
-                          for (let a = 0; a < dataItem.attributes.length; a++) {
-                            if (dataItem.attributes[a].name === contentItem.name) {
-                              return (
-                                <td
-                                  style={{
-                                    fontSize: 12,
-                                    color: crGreen,
-                                    minWidth: "70px",
-                                    textAlign: "left",
-                                    fontFamily: "Courier",
-                                    borderTop: "0.5px solid #a6a6a6",
-                                  }}
-                                >
-                                  {/* {dataItem.attributes[a].name} */}
-                                  {getGridFormItems(dataItem.attributes[a], contentItem)}
-                                </td>
-                              )
-                            }
-                          }
-                        })
-                      })}
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+                        );
+                      })
+                    )}
+                  </tr>
+                </thead>
+                {subDocList !== null && subDocList !== undefined && (
+                  <TableBody>
+                    {Object.keys(subDocList).length !== 0 &&
+                      fetchSubDocListBySize(section.name, subDocList[section.name].documents).map((dataItem, index) => (
+                        // subDocList[section.name].documents.map((dataItem, index) => (
+                        index < subDocListPages[section.name] * 10 &&
+                        <tr style={{ height: 35 }}>
+                          {subDocList[section.name].buttons !== null &&
+                            subDocList[section.name].buttons.length > 0 && (
+                              <td
+                                style={{
+                                  maxWidth: 34,
+                                  textAlign: "center",
+                                }}
+                              >
+                                {subDocList[section.name].buttons !== "null" &&
+                                  subDocList[section.name].buttons.map((button) => (
+                                    <Button
+                                      key={button.name}
+                                      name={button.name}
+                                      value={button.name}
+                                      onClick={() =>
+                                        buttonClick(button.name, dataItem)
+                                      }
+                                      style={{
+                                        height: 20,
+                                        fontSize: 10,
+                                        maxWidth: 36,
+                                        marginTop: 4,
+                                        marginBottom: 4,
+                                        fontWeight: "bold",
+                                        fontFamily: "Courier",
+                                        color: crSnowBlue,
+                                        backgroundColor: crSnow,
+                                        border: "1px solid #2d838d", //crSnowBlue
+                                      }}
+                                    >
+                                      {button.label}
+                                    </Button>
+                                  ))}
+                              </td>
+                            )}
+                          {section.sections.map((sectionItem) => {
+                            return sectionItem.contents.map((contentItem) => {
+                              for (let a = 0; a < dataItem.attributes.length; a++) {
+                                if (dataItem.attributes[a].name === contentItem.name) {
+                                  return (
+                                    <td
+                                      style={{
+                                        fontSize: 12,
+                                        color: crGreen,
+                                        minWidth: "70px",
+                                        textAlign: "left",
+                                        fontFamily: "Courier",
+                                        borderTop: "0.5px solid #a6a6a6",
+                                      }}
+                                    >
+                                      {/* {dataItem.attributes[a].name} */}
+                                      {getGridFormItems(dataItem.attributes[a], contentItem)}
+                                    </td>
+                                  )
+                                }
+                              }
+                            })
+                          })}
+                        </tr>
+                      ))}
+                  </TableBody>
+                )}
+              </table>
+              <Grid
+                container
+                direction="row"
+                justifyContent="flex-start"
+                alignItems="center"
+                style={{
+                  backgroundColor: crSnowGrey,
+                  borderTop: "0.5px solid #a6a6a6",
+                  borderBottom: "0.5px solid grey",
+                }}
+              >
+                <tr>
+                  <td>
+                    <LightTooltip title="Переход на первую страницу">
+                      <IconButton onClick={() => DocListKeyboardArrowFirstClick()}>
+                        <FirstPageIcon
+                          style={{ fontSize: 18, color: crSnowBlue }}
+                        />
+                      </IconButton>
+                    </LightTooltip>
+                  </td>
+                  <td>
+                    <LightTooltip title="Переход на предыдущую страницу">
+                      <IconButton
+                        onClick={() => DocListKeyboardArrowLeftClick(section.name)}
+                      >
+                        <ArrowBackIosIcon
+                          className={classes.paginationStyle}
+                        />
+                      </IconButton>
+                    </LightTooltip>
+                  </td>
+                  <td className={classes.paginationStyle}>
+                    <input
+                      style={{
+                        maxWidth: 18,
+                        color: crSnow,
+                        textAlign: "center",
+                        border: "0.5px solid snow",
+                        backgroundColor: crSnowBlue,
+                      }}
+                      value={subDocListPages[section.name]}
+                    // onChange={handlePageChange}
+                    ></input>
+                  </td>
+                  <td>
+                    <LightTooltip title="Переход на следующую страницу">
+                      <IconButton
+                        onClick={() => DocListKeyboardArrowRightClick(section.name)}
+                      >
+                        <ArrowForwardIosIcon
+                          className={classes.paginationStyle}
+                        />
+                      </IconButton>
+                    </LightTooltip>
+                  </td>
+                  <td className={classes.paginationStyle}>
+                    Кол-во строк: {subDocList[section.name].totalCount}
+                  </td>
+                </tr>
+              </Grid>
+            </Grid>
           }
         </tbody>
       </table>
@@ -1962,7 +2236,7 @@ export default (props) => {
         <TextField
           type="date"
           name={contentItem.name}
-          onBlur={handleDateTimeChange} // YYYY=MM-DD
+          onBlur={handleDateTimeChange} // YYYY-MM-DD
           style={{ width: "100%", height: 10 }}
           defaultValue={getValue(contentItem.name, contentItem.type, section)} // YYYY-DD-MM
           disabled={
@@ -2001,8 +2275,10 @@ export default (props) => {
         value = ""
       }
       else {
+        // if (section.type === "Doc") {
         value = parseDate(value)
-        // console.log("DD", value, name,)
+        // }
+        // console.log("DD", value, name)
       }
     }
     return value
@@ -2011,7 +2287,7 @@ export default (props) => {
     try {
       for (let i = 0; i < subDocuments[subDocName].attributes.length; i++) {
         if (subDocuments[subDocName].attributes[i].name === contentItemName) {
-          return subDocuments[subDocName].attributes[i].value;
+          return subDocuments[subDocName].attributes[i].value
         }
       }
     }
@@ -2111,6 +2387,18 @@ export default (props) => {
         />
       );
     }
+  }
+  function fetchSubDocListBySize(name, documents) {
+    let s = 10
+    let docs = []
+    let from = (subDocListPages[name] * s) - s
+    let to = (subDocListPages[name] * s) - 1
+    for (let i = 0; i < documents.length; i++) {
+      if (i >= from && i <= to) {
+        docs.push(documents[i])
+      }
+    }
+    return docs
   }
   // console.log("FIELDS", fieldValue)
   // console.log("SOP", selectedOptions)

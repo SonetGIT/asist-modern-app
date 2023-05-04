@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-// import clsx from 'clsx';
-// import { makeStyles} from '@material-ui/core/styles';
 import Table from "@material-ui/core/Table"; // Material ui table for usual form
-// import TableFooter from '@material-ui/core/TableFooter';
-// import { Table} from 'reactstrap';  // Core ui table for grid form
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import TableBody from "@material-ui/core/TableBody";
@@ -11,28 +7,11 @@ import TableCell from "@material-ui/core/TableCell";
 import Button from "@material-ui/core/Button";
 import { Grid } from "@material-ui/core";
 import Paper from "@material-ui/core/Paper";
-// import GridSelect from '@material-ui/core/Select';
-import FormControl from "@material-ui/core/FormControl";
-import IconButton from "@material-ui/core/IconButton";
-
-import MenuItem from "@material-ui/core/MenuItem";
-import FirstPageIcon from "@material-ui/icons/FirstPage";
-import ArrowForwardIosIcon from "@material-ui/icons/ArrowForwardIos";
-import ArrowBackIosIcon from "@material-ui/icons/ArrowBackIos";
 import LinearProgress from "@material-ui/core/LinearProgress";
-import Snackbar from "@material-ui/core/Snackbar";
-import NumberFormat from "react-number-format";
-import PropTypes from "prop-types";
 // Form components
-import TextField from "@material-ui/core/TextField";
-import Select from "react-select";
 import Checkbox from "@material-ui/core/Checkbox";
 // Libraries
 import swal from "sweetalert"; // https://sweetalert.js.org/guides/
-import Tooltip from "@material-ui/core/Tooltip";
-// import { useToasts } from 'react-toast-notifications' // https://jossmac.github.io/react-toast-notifications/
-// import { FormWithToasts } from "./ToastProvider.jsx";
-// import { ToastProvider, useToasts } from 'react-toast-notifications'
 
 var generator = require("generate-password");
 
@@ -123,7 +102,6 @@ export default (props) => {
   function clearTabData(process_id) {
     props.clearTabData(process_id);
   }
-
   // random UUID generator
   function getUUID() {
     const uuidv1 = require("uuid/v1");
