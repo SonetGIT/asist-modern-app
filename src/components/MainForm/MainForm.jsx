@@ -157,7 +157,7 @@ export default (props) => {
 
   // Set data from props to state of component
   useEffect(() => {
-    console.log("MAINFORM PROPS", props);
+    console.log("MAINFORM PROPS", props.userTask);
     setbuttonFilesId(getUUID());
     if (props.userTask.docList !== "null" && props.userTask.docList !== null) {
       let parsedData = JSON.parse(props.userTask.docList);
