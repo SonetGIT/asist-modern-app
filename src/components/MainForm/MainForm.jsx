@@ -181,16 +181,43 @@ export default (props) => {
       let parsedSelectedDoc = JSON.parse(props.userTask.selectedDoc);
       let fields = {};
 
-      // for (let s = 0; s < Form.sections.length; s++) {
-      //   for (let c = 0; c < Form.sections[s].contents.length; c++) {
-      //     let fieldName = Form.sections[s].contents[c].name;
-      //     fields[fieldName] = parsedSelectedDoc[fieldName];
-      //   }
-      // }
-      for (let s = 0; s < parsedSelectedDoc.attributes.length; s++) {
-        let fieldName = parsedSelectedDoc.attributes[s].name;
-        fields[fieldName] = parsedSelectedDoc.attributes[s].value;
+      for (let s = 0; s < Form.sections.length; s++) {
+        if (Form.sections[s].type === "Section") {
+          for (let c = 0; c < Form.sections[s].contents.length; c++) {
+            if (Form.sections[s].contents[c].edit === true) {
+              let fieldName = Form.sections[s].contents[c].name;
+              for (let s = 0; s < parsedSelectedDoc.attributes.length; s++) {
+                if (fieldName === parsedSelectedDoc.attributes[s].name) {
+                  fields[fieldName] = parsedSelectedDoc.attributes[s].value;
+                }
+              }
+            }
+          }
+        }
+        else if (Form.sections[s].type === "Doc") {
+          for (let s2 = 0; s2 < Form.sections[s].sections.length; s2++) {
+            if (Form.sections[s].sections[s2].type === "Section") {
+              console.log(Form.sections[s].name)
+              for (let c = 0; c < Form.sections[s].sections[s2].contents.length; c++) {
+                if (Form.sections[s].sections[s2].contents[c].edit === true) {
+                  let fieldName = Form.sections[s].sections[s2].contents[c].name;
+                  let sName = Form.sections[s].name
+                  for (let a = 0; a < props.userTask.subDocuments[sName].attributes.length; a++) {
+                    if (fieldName === props.userTask.subDocuments[sName].attributes[a].name) {
+                      fields[fieldName] = props.userTask.subDocuments[sName].attributes[a].value;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
+
+      // for (let s = 0; s < parsedSelectedDoc.attributes.length; s++) {
+      //   let fieldName = parsedSelectedDoc.attributes[s].name;
+      //   fields[fieldName] = parsedSelectedDoc.attributes[s].value;
+      // }
       console.log("SDOC", parsedSelectedDoc);
       console.log("FIELDVAL", fields);
       setSelectedDoc(parsedSelectedDoc);
@@ -213,6 +240,13 @@ export default (props) => {
       for (let s = 0; s < Form.sections.length; s++) {
         if (Form.sections[s].type === "DocList") {
           pages[Form.sections[s].name] = 1
+        }
+        else if (Form.sections[s].type === "Doc") {
+          for (let s2 = 0; s2 < Form.sections[s].sections.length; s2++) {
+            if (Form.sections[s].sections[s2].type === "DocList") {
+              pages[Form.sections[s].sections[s2].name] = 1
+            }
+          }
         }
       }
       setSubDocListPages(pages)
@@ -393,7 +427,8 @@ export default (props) => {
         ...enumOptions,
         ["DistrictId"]: filtered,
       });
-    } else if (option.name === "DistrictId") {
+    }
+    else if (option.name === "DistrictId") {
       for (let i = 0; i < updateSelectedOptions.length; i++) {
         if (updateSelectedOptions[i].name === "DjamoatId") {
           updateSelectedOptions[i] = {
@@ -414,7 +449,8 @@ export default (props) => {
         ...enumOptions,
         ["DjamoatId"]: filtered,
       });
-    } else if (option.name === "DjamoatId") {
+    }
+    else if (option.name === "DjamoatId") {
       // Clear Village Option
       for (let i = 0; i < updateSelectedOptions.length; i++) {
         if (updateSelectedOptions[i].name === "VillageId") {
@@ -437,6 +473,7 @@ export default (props) => {
         ["VillageId"]: filtered,
       });
     }
+    // console.log("FVAL", fieldValue)
   }
   function filterEnumDataByValue(child, parent, value) {
     let filtered = [
@@ -670,22 +707,12 @@ export default (props) => {
     };
     if (Form !== null && Form !== "null") {
       for (let s = 0; s < Form.sections.length; s++) {
-        if (Form.sections[s].type === "Doc") {
-          attrs.attributes.push({
-            name: Form.sections[s].name,
-            value: fieldValue[Form.sections[s].name],
-            type: "Doc",
-          });
-        }
-        else {
-          if (Form.sections[s].type !== "DocList") {
-            for (let c = 0; c < Form.sections[s].contents.length; c++) {
+        // 1 Level
+        if (Form.sections[s].type === "Section") {
+          for (let c = 0; c < Form.sections[s].contents.length; c++) {
+            if (Form.sections[s].contents[c].edit === true) {
               let name = Form.sections[s].contents[c].name;
               if (fieldValue[name] !== undefined) {
-                let val = fieldValue[name]
-                if (Form.sections[s].contents[c].type === "DateTime") {
-                  val = moment(val).format("DD-MM-YYYY HH:MM:SS")
-                }
                 attrs.attributes.push({
                   name: name,
                   value: fieldValue[name],
@@ -695,8 +722,68 @@ export default (props) => {
             }
           }
         }
+        // 2 Level
+        else if (Form.sections[s].type === "Doc") {
+          if (Form.sections[s].addToAttributes === true) {
+            let name = Form.sections[s].name;
+            if (fieldValue[name] !== undefined) {
+              attrs.attributes.push({
+                name: name,
+                value: fieldValue[name],
+                type: "Doc"
+              });
+            }
+          }
+          else {
+            for (let s2 = 0; s2 < Form.sections[s].sections.length; s2++) {
+              if (Form.sections[s].sections[s2].type === "Section") {
+                for (let c2 = 0; c2 < Form.sections[s].sections[s2].contents.length; c2++) {
+                  if (Form.sections[s].sections[s2].contents[c2].edit === true) {
+                    let name = Form.sections[s].sections[s2].contents[c2].name;
+                    if (fieldValue[name] !== undefined) {
+                      attrs.attributes.push({
+                        name: name,
+                        value: fieldValue[name],
+                        type: Form.sections[s].sections[s2].contents[c2].type
+                      });
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
+    // if (Form !== null && Form !== "null") {
+    //   for (let s = 0; s < Form.sections.length; s++) {
+    //     if (Form.sections[s].type === "Doc") {
+    //       attrs.attributes.push({
+    //         name: Form.sections[s].name,
+    //         value: fieldValue[Form.sections[s].name],
+    //         type: "Doc",
+    //       });
+    //     }
+    //     else {
+    //       if (Form.sections[s].type !== "DocList") {
+    //         for (let c = 0; c < Form.sections[s].contents.length; c++) {
+    //           let name = Form.sections[s].contents[c].name;
+    //           if (fieldValue[name] !== undefined) {
+    //             let val = fieldValue[name]
+    //             // if (Form.sections[s].contents[c].type === "DateTime") {
+    //             //   val = moment(val).format("DD-MM-YYYY HH:MM:SS")
+    //             // }
+    //             attrs.attributes.push({
+    //               name: name,
+    //               value: fieldValue[name],
+    //               type: Form.sections[s].contents[c].type
+    //             });
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
     if (attrs.attributes.length === 0) {
       return {};
     } else {
@@ -1840,15 +1927,10 @@ export default (props) => {
   }
   // Create body of each section and call contentBuilder function
   function bodyBuilder(section) {
-    // console.log("S", section)
-    // let subDocL = null
-    // if (section.type === "DocList") {
-    //   subDocL = subDocList[section.name]
-    // }
-    // console.log("SBD", subDocL)
     return (
       <table>
         <tbody>
+          {/* 1 Level */}
           {section.type === "Section" &&
             section.contents.map((contentItem) =>
               contentItem.show === true && (
@@ -1864,73 +1946,275 @@ export default (props) => {
                     {contentItem.label}
                   </td>
                   <td style={{ width: "60%" }}>
-                    {contentBuilder(contentItem, section)}
+                    {contentBuilder(contentItem, section, 1)}
                   </td>
                 </tr>
               )
             )
           }
           {section.type === "Doc" &&
-            section.sections.map(sectionItem => (
-              // sectionBuilder(sectionItem)
-              <>
-                <table width="100%">
-                  <thead>
-                    <tr>
-                      <td
-                        style={{
-                          width: "100%",
-                          color: crSnow,
-                          fontSize: 16,
-                          textAlign: "center",
-                          textShadow: "1px 1px black",
-                          fontFamily: "Courier",
-                          backgroundColor: crGreen,
-                          borderTopLeftRadius: 10,
-                          borderTopRightRadius: 10,
-                          // wordWrap: "break-word",
-                        }}
-                      >
-                        {sectionItem.label}
-                      </td>
-                    </tr>
-                  </thead>
-                </table>
-                <table width="100%">
-                  {
-                    sectionItem.contents.map(cItem => {
-                      let sItem = sectionItem
-                      sItem.type = "Doc"
-                      sItem.name = section.name
-                      if (cItem.show === true) {
-                        return (
-                          <tr>
-                            <td
-                              style={{
-                                width: "40%",
-                                color: crBlue,
-                                fontSize: 14,
-                                fontFamily: "Courier",
-                              }}
-                            >
-                              {cItem.label}
-                            </td>
-                            <td style={{ width: "60%" }}>
-                              {contentBuilder(cItem, sItem)}
-                            </td>
-                          </tr>
-                        )
+            section.sections.map(section2 => {
+              if (section2.type === "Section") {
+                return (
+                  <>
+                    <table width="100%">
+                      <thead>
+                        <tr>
+                          <td
+                            style={{
+                              width: "100%",
+                              color: crSnow,
+                              fontSize: 16,
+                              textAlign: "center",
+                              textShadow: "1px 1px black",
+                              fontFamily: "Courier",
+                              backgroundColor: crGreen,
+                              borderTopLeftRadius: 10,
+                              borderTopRightRadius: 10,
+                              // wordWrap: "break-word",
+                            }}
+                          >
+                            {section2.label}
+                          </td>
+                        </tr>
+                      </thead>
+                    </table>
+                    <table width="100%">
+                      {
+                        section2.contents.map(cItem => {
+                          let sItem = section
+                          sItem.type = "Doc"
+                          sItem.name = section.name
+                          if (cItem.show === true) {
+                            return (
+                              <tr>
+                                <td
+                                  style={{
+                                    width: "40%",
+                                    color: crBlue,
+                                    fontSize: 14,
+                                    fontFamily: "Courier",
+                                  }}
+                                >
+                                  {cItem.label}
+                                </td>
+                                <td style={{ width: "60%" }}>
+                                  {contentBuilder(cItem, sItem, 2)}
+                                </td>
+                              </tr>
+                            )
+                          }
+                        })
                       }
-                    })
-                  }
-                </table>
-              </>
-            ))
+                    </table>
+                  </>
+                )
+              }
+              else if (section2.type === "DocList") {
+                return (
+                  <Grid>
+                    <table
+                      size="auto"
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                      }}
+                    >
+                      <thead size="auto" style={{ backgroundColor: crGreen }}>
+                        <tr>
+                          <td
+                            rowSpan="2"
+                            key={"action"}
+                            style={{
+                              color: crSnow,
+                              padding: 7,
+                              minWidth: 70,
+                              fontSize: 14,
+                              textAlign: "center",
+                              fontFamily: "Courier",
+                              border: "0.5px solid #3a666c",
+                            }}
+                          >
+                            Действие
+                          </td>
+                          {section2.sections.map((section3) => {
+                            return (
+                              <td
+                                colSpan={section3.contents.length}
+                                style={{
+                                  fontSize: 16,
+                                  color: crSnow,
+                                  textAlign: "center",
+                                  fontFamily: "Courier",
+                                  border: "0.5px solid #3a666c",
+                                }}
+                              >
+                                {section3.label}
+                              </td>
+                            )
+                          })}
+                        </tr>
+                        <tr>
+                          {section2.sections.map((section3) =>
+                            section3.contents.map((contentItem) => {
+                              return (
+                                <td
+                                  rowSpan="2"
+                                  style={{
+                                    color: crSnow,
+                                    padding: 7,
+                                    fontSize: 14,
+                                    textAlign: "center",
+                                    fontFamily: "Courier",
+                                    border: "0.5px solid #3a666c",
+                                  }}
+                                >
+                                  {contentItem.label}
+                                </td>
+                              );
+                            })
+                          )}
+                        </tr>
+                      </thead>
+                      {subDocList !== null && subDocList !== undefined && (
+                        <TableBody>
+                          {Object.keys(subDocList).length !== 0 &&
+                            fetchSubDocListBySize(section2.name, subDocList[section2.name].documents).map((dataItem, index) => (
+
+                              index < subDocListPages[section2.name] * 10 &&
+                              <tr style={{ height: 35 }}>
+                                {subDocList[section2.name].buttons !== null &&
+                                  subDocList[section2.name].buttons.length > 0 && (
+                                    <td
+                                      style={{
+                                        maxWidth: 34,
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      {subDocList[section2.name].buttons !== "null" &&
+                                        subDocList[section2.name].buttons.map((button) => (
+                                          <Button
+                                            key={button.name}
+                                            name={button.name}
+                                            value={button.name}
+                                            onClick={() =>
+                                              buttonClick(button.name, dataItem)
+                                            }
+                                            style={{
+                                              height: 20,
+                                              fontSize: 10,
+                                              maxWidth: 36,
+                                              marginTop: 4,
+                                              marginBottom: 4,
+                                              fontWeight: "bold",
+                                              fontFamily: "Courier",
+                                              color: crSnowBlue,
+                                              backgroundColor: crSnow,
+                                              border: "1px solid #2d838d", //crSnowBlue
+                                            }}
+                                          >
+                                            {button.label}
+                                          </Button>
+                                        ))}
+                                    </td>
+                                  )}
+                                {section2.sections.map((section3) => {
+                                  return section3.contents.map((contentItem) => {
+                                    for (let a = 0; a < dataItem.attributes.length; a++) {
+                                      if (dataItem.attributes[a].name === contentItem.name) {
+                                        return (
+                                          <td
+                                            style={{
+                                              fontSize: 12,
+                                              color: crGreen,
+                                              minWidth: "70px",
+                                              textAlign: "left",
+                                              fontFamily: "Courier",
+                                              borderTop: "0.5px solid #a6a6a6",
+                                            }}
+                                          >
+                                            {/* {dataItem.attributes[a].name} */}
+                                            {getGridFormItems(dataItem.attributes[a], contentItem)}
+                                          </td>
+                                        )
+                                      }
+                                    }
+                                  })
+                                })}
+                              </tr>
+                            ))}
+                        </TableBody>
+                      )}
+                    </table>
+                    <Grid
+                      container
+                      direction="row"
+                      justifyContent="flex-start"
+                      alignItems="center"
+                      style={{
+                        backgroundColor: crSnowGrey,
+                        borderTop: "0.5px solid #a6a6a6",
+                        borderBottom: "0.5px solid grey",
+                      }}
+                    >
+                      <tr>
+                        <td>
+                          <LightTooltip title="Переход на первую страницу">
+                            <IconButton onClick={() => DocListKeyboardArrowFirstClick()}>
+                              <FirstPageIcon
+                                style={{ fontSize: 18, color: crSnowBlue }}
+                              />
+                            </IconButton>
+                          </LightTooltip>
+                        </td>
+                        <td>
+                          <LightTooltip title="Переход на предыдущую страницу">
+                            <IconButton
+                              onClick={() => DocListKeyboardArrowLeftClick(section2.name)}
+                            >
+                              <ArrowBackIosIcon
+                                className={classes.paginationStyle}
+                              />
+                            </IconButton>
+                          </LightTooltip>
+                        </td>
+                        <td className={classes.paginationStyle}>
+                          <input
+                            style={{
+                              maxWidth: 18,
+                              color: crSnow,
+                              textAlign: "center",
+                              border: "0.5px solid snow",
+                              backgroundColor: crSnowBlue,
+                            }}
+                            value={subDocListPages[section2.name]}
+                          // onChange={handlePageChange}
+                          ></input>
+                        </td>
+                        <td>
+                          <LightTooltip title="Переход на следующую страницу">
+                            <IconButton
+                              onClick={() => DocListKeyboardArrowRightClick(section2.name)}
+                            >
+                              <ArrowForwardIosIcon
+                                className={classes.paginationStyle}
+                              />
+                            </IconButton>
+                          </LightTooltip>
+                        </td>
+                        <td className={classes.paginationStyle}>
+                          Кол-во строк: {subDocList[section2.name].totalCount}
+                        </td>
+                      </tr>
+                    </Grid>
+                  </Grid>
+                )
+              }
+            })
           }
           {section.type === "DocList" &&
             <Grid>
               <table
-                // id={gridTableId}
                 size="auto"
                 style={{
                   width: "100%",
@@ -1939,8 +2223,6 @@ export default (props) => {
               >
                 <thead size="auto" style={{ backgroundColor: crGreen }}>
                   <tr>
-                    {/* {subDocList[section.name].buttons !== "null" &&
-                      subDocList[section.name].buttons.length > 0 && ( */}
                     <td
                       rowSpan="2"
                       key={"action"}
@@ -1956,11 +2238,10 @@ export default (props) => {
                     >
                       Действие
                     </td>
-                    {/* )} */}
-                    {section.sections.map((sectionItem) => {
+                    {section.sections.map((section2) => {
                       return (
                         <td
-                          colSpan={sectionItem.contents.length}
+                          colSpan={section2.contents.length}
                           style={{
                             fontSize: 16,
                             color: crSnow,
@@ -1969,7 +2250,7 @@ export default (props) => {
                             border: "0.5px solid #3a666c",
                           }}
                         >
-                          {sectionItem.label}
+                          {section2.label}
                         </td>
                       )
                     })}
@@ -2001,7 +2282,7 @@ export default (props) => {
                   <TableBody>
                     {Object.keys(subDocList).length !== 0 &&
                       fetchSubDocListBySize(section.name, subDocList[section.name].documents).map((dataItem, index) => (
-                        // subDocList[section.name].documents.map((dataItem, index) => (
+
                         index < subDocListPages[section.name] * 10 &&
                         <tr style={{ height: 35 }}>
                           {subDocList[section.name].buttons !== null &&
@@ -2039,8 +2320,8 @@ export default (props) => {
                                   ))}
                               </td>
                             )}
-                          {section.sections.map((sectionItem) => {
-                            return sectionItem.contents.map((contentItem) => {
+                          {section.sections.map((section2) => {
+                            return section2.contents.map((contentItem) => {
                               for (let a = 0; a < dataItem.attributes.length; a++) {
                                 if (dataItem.attributes[a].name === contentItem.name) {
                                   return (
@@ -2135,20 +2416,16 @@ export default (props) => {
     );
   }
   // Creating components by it's type
-  function contentBuilder(contentItem, section) {
+  function contentBuilder(contentItem, section, level) {
+    // console.log("contentItem", contentItem, section.name)
     if (contentItem.type === "Text") {
       return (
         <TextField
           name={contentItem.name}
-          style={{
-            width: "100%",
-            height: 10,
-          }}
-          disabled={
-            formType === "view" || contentItem.edit === false ? true : false
-          }
+          style={{ width: "100%", height: 10 }}
+          disabled={formType === "view" || contentItem.edit === false ? true : false}
           onBlur={handleChange}
-          defaultValue={getValue(contentItem.name, contentItem.type, section)}
+          defaultValue={getValue(contentItem, section, level)}
         />
       );
     }
@@ -2160,7 +2437,7 @@ export default (props) => {
       };
       let fieldVal = null
 
-      if (section.type === "Doc") {
+      if (section.type === "Doc" && contentItem.edit === false) {
         // console.log("EN DOC", section.name, contentItem)
         fieldVal = getSubDocFieldValue(section.name, contentItem.name)
       }
@@ -2194,21 +2471,17 @@ export default (props) => {
           }}
           name={contentItem.name}
           onChange={handleCheckboxChange}
-          disabled={
-            formType === "view" || contentItem.edit === false ? true : false
-          }
-          checked={getValue(contentItem.name, contentItem.type, section)}
+          disabled={formType === "view" || contentItem.edit === false ? true : false}
+          checked={getValue(contentItem, section, level)}
         />
       );
     }
     else if (contentItem.type === "Int") {
       return (
         <TextField
-          disabled={
-            formType === "view" || contentItem.edit === false ? true : false
-          }
+          disabled={formType === "view" || contentItem.edit === false ? true : false}
           style={{ width: "100%", height: 10 }}
-          defaultValue={getValue(contentItem.name, contentItem.type, section)}
+          defaultValue={getValue(contentItem, section, level)}
           // value = {(fieldValue[contentItem.name] !== undefined) ? fieldValue[contentItem.name]: ""}
           onBlur={handleIntChange}
           name={contentItem.name}
@@ -2222,11 +2495,9 @@ export default (props) => {
         <TextField
           name={contentItem.name}
           onBlur={handleFloatChange}
-          value={getValue(contentItem.name, contentItem.type, section)}
+          value={getValue(contentItem, section, level)}
           style={{ width: "100%", height: 10 }}
-          disabled={
-            formType === "view" || contentItem.edit === false ? true : false
-          }
+          disabled={formType === "view" || contentItem.edit === false ? true : false}
           InputProps={{ inputComponent: FloatFormat }}
         />
       );
@@ -2238,31 +2509,37 @@ export default (props) => {
           name={contentItem.name}
           onBlur={handleDateTimeChange} // YYYY-MM-DD
           style={{ width: "100%", height: 10 }}
-          defaultValue={getValue(contentItem.name, contentItem.type, section)} // YYYY-DD-MM
-          disabled={
-            formType === "view" || contentItem.edit === false ? true : false
-          }
-          InputLabelProps={{
-            shrink: true,
-          }}
+          defaultValue={getValue(contentItem, section, level)} // YYYY-DD-MM
+          disabled={formType === "view" || contentItem.edit === false ? true : false}
+          InputLabelProps={{ shrink: true }}
         />
       );
     }
   }
-  function getValue(name, type, section) {
+  function getValue(cItem, section, level) {
     let value = null
-    if (section.type === "Doc") {
-      value = getSubDocFieldValue(section.name, name)
+    if (section.type === "Doc" && cItem.edit === false) {
+      value = getSubDocFieldValue(section.name, cItem.name)
     }
     else {
-      value = fieldValue[name]
+      if (level === 1 && cItem.edit === true) {
+        value = fieldValue[cItem.name]
+      }
+      else {
+        for (let i = 0; i < selectedDoc.attributes.length; i++) {
+          if (cItem.name === selectedDoc.attributes[i].name) {
+            value = selectedDoc.attributes[i].value
+            console.log("VAL", selectedDoc.attributes[i].value)
+          }
+        }
+      }
     }
-    if (type === "Text" || type === "Int" || type === "Float") {
+    if (cItem.type === "Text" || cItem.type === "Int" || cItem.type === "Float") {
       if (value === undefined || value === null) {
         value = ""
       }
     }
-    else if (type === "Bool") {
+    else if (cItem.type === "Bool") {
       if (value === false || value === null || value === undefined || value === "False") {
         value = false
       }
@@ -2270,15 +2547,15 @@ export default (props) => {
         value = true
       }
     }
-    else if (type === "DateTime") {
+    else if (cItem.type === "DateTime") {
       if (value === null || value === "" || value === undefined) {
         value = ""
       }
       else {
-        // if (section.type === "Doc") {
+        // if (section.cItem.type === "Doc") {
         value = parseDate(value)
         // }
-        // console.log("DD", value, name)
+        // console.log("DD", value, cItem.name)
       }
     }
     return value
@@ -2286,6 +2563,7 @@ export default (props) => {
   function getSubDocFieldValue(subDocName, contentItemName) {
     try {
       for (let i = 0; i < subDocuments[subDocName].attributes.length; i++) {
+        // console.log("hhhh:", subDocuments[subDocName].attributes.length)
         if (subDocuments[subDocName].attributes[i].name === contentItemName) {
           return subDocuments[subDocName].attributes[i].value
         }
