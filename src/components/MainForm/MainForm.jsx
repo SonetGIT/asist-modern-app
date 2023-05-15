@@ -180,31 +180,39 @@ export default (props) => {
     ) {
       let parsedSelectedDoc = JSON.parse(props.userTask.selectedDoc);
       let fields = {};
-
-      for (let s = 0; s < Form.sections.length; s++) {
-        if (Form.sections[s].type === "Section") {
-          for (let c = 0; c < Form.sections[s].contents.length; c++) {
-            if (Form.sections[s].contents[c].edit === true) {
-              let fieldName = Form.sections[s].contents[c].name;
-              for (let s = 0; s < parsedSelectedDoc.attributes.length; s++) {
-                if (fieldName === parsedSelectedDoc.attributes[s].name) {
-                  fields[fieldName] = parsedSelectedDoc.attributes[s].value;
+      if (Form !== null) {
+        for (let s = 0; s < Form.sections.length; s++) {
+          if (Form.sections[s].type === "Section") {
+            for (let c = 0; c < Form.sections[s].contents.length; c++) {
+              if (Form.sections[s].contents[c].edit === true) {
+                let fieldName = Form.sections[s].contents[c].name;
+                for (let s = 0; s < parsedSelectedDoc.attributes.length; s++) {
+                  if (fieldName === parsedSelectedDoc.attributes[s].name) {
+                    fields[fieldName] = parsedSelectedDoc.attributes[s].value;
+                  }
                 }
               }
             }
           }
-        }
-        else if (Form.sections[s].type === "Doc") {
-          for (let s2 = 0; s2 < Form.sections[s].sections.length; s2++) {
-            if (Form.sections[s].sections[s2].type === "Section") {
-              console.log(Form.sections[s].name)
-              for (let c = 0; c < Form.sections[s].sections[s2].contents.length; c++) {
-                if (Form.sections[s].sections[s2].contents[c].edit === true) {
-                  let fieldName = Form.sections[s].sections[s2].contents[c].name;
-                  let sName = Form.sections[s].name
-                  for (let a = 0; a < props.userTask.subDocuments[sName].attributes.length; a++) {
-                    if (fieldName === props.userTask.subDocuments[sName].attributes[a].name) {
-                      fields[fieldName] = props.userTask.subDocuments[sName].attributes[a].value;
+          else if (Form.sections[s].type === "Doc") {
+            for (let atr = 0; atr < parsedSelectedDoc.attributes.length; atr++) {
+              if (Form.sections[s].name === parsedSelectedDoc.attributes[atr].name) {
+                // console.log("Sub Doc", Form.sections[s].name)
+                fields[Form.sections[s].name] = parsedSelectedDoc.attributes[atr].value;
+              }
+            }
+            for (let s2 = 0; s2 < Form.sections[s].sections.length; s2++) {
+              if (Form.sections[s].sections[s2].type === "Section") {
+                // console.log(Form.sections[s].name)
+                for (let c = 0; c < Form.sections[s].sections[s2].contents.length; c++) {
+                  if (Form.sections[s].sections[s2].contents[c].edit === true) {
+                    let fieldName = Form.sections[s].sections[s2].contents[c].name;
+                    let sName = Form.sections[s].name
+                    // console.log("Sub Doc", sName, fieldName)
+                    for (let a = 0; a < props.userTask.subDocuments[sName].attributes.length; a++) {
+                      if (fieldName === props.userTask.subDocuments[sName].attributes[a].name) {
+                        fields[fieldName] = props.userTask.subDocuments[sName].attributes[a].value;
+                      }
                     }
                   }
                 }
@@ -308,6 +316,8 @@ export default (props) => {
 
   const handleCheckboxChange = (event) => {
     setFieldValue({ ...fieldValue, [event.target.name]: event.target.checked });
+    console.log("BOOL CH", event.target.name, event.target.checked)
+    console.log("FVAL", fieldValue)
   };
   // Integer input handler
   const handleIntChange = (event) => {
@@ -730,7 +740,8 @@ export default (props) => {
               attrs.attributes.push({
                 name: name,
                 value: fieldValue[name],
-                type: "Doc"
+                type: "Doc",
+                subDocument: null
               });
             }
           }
@@ -934,11 +945,8 @@ export default (props) => {
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
-
-
     else if (name === "saveFamMemDoc") {
       let docToSave = getFieldValuesSaveDocument();
-      // console.log("docToSave:", docToSave);      
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -956,6 +964,12 @@ export default (props) => {
       clearTabData(process_id);
     }
     else if (name === "deleteFM") {
+      let appStateId = null
+      for (let i = 0; i < selectedDoc.attributes.length; i++) {
+        if (selectedDoc.attributes[i].name === "Application_State") {
+          appStateId = selectedDoc.attributes[i].value
+        }
+      }
       const commandJson =
       {
         commandType: "completeTask",
@@ -966,7 +980,7 @@ export default (props) => {
         userRole: userProfile.userRole,
         variables: {
           userAction: { value: "deleteFM" },
-          appStateId: { value: selectedDoc.id },
+          appStateId: { value: appStateId },
           familyMemberId: { value: item.id }
         }
       }
@@ -989,12 +1003,12 @@ export default (props) => {
         })
     }
     else if (name === "createLandPlotDoc") {
-      /*let appStateId = null
+      let appStateId = null
       for (let i = 0; i < selectedDoc.attributes.length; i++) {
         if (selectedDoc.attributes[i].name === "Application_State") {
           appStateId = selectedDoc.attributes[i].value
         }
-      }*/
+      }
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1004,7 +1018,7 @@ export default (props) => {
         userRole: userProfile.userRole,
         variables: {
           userAction: { value: "createLandPlotDoc" },
-          appStateId: { value: selectedDoc.id },
+          appStateId: { value: appStateId },
         },
       };
       console.log("createLandPlotDoc:", commandJson);
@@ -1035,7 +1049,6 @@ export default (props) => {
     }
     else if (name === "saveLandPlotDoc") {
       let docToSave = getFieldValuesSaveDocument();
-      // console.log("docToSave:", docToSave);      
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1053,6 +1066,12 @@ export default (props) => {
       clearTabData(process_id);
     }
     else if (name === "deleteLP") {
+      let appStateId = null
+      for (let i = 0; i < selectedDoc.attributes.length; i++) {
+        if (selectedDoc.attributes[i].name === "Application_State") {
+          appStateId = selectedDoc.attributes[i].value
+        }
+      }
       const commandJson =
       {
         commandType: "completeTask",
@@ -1063,7 +1082,7 @@ export default (props) => {
         userRole: userProfile.userRole,
         variables: {
           userAction: { value: "deleteLP" },
-          appStateId: { value: selectedDoc.id },
+          appStateId: { value: appStateId },
           landAndPlotId: { value: item.id }
         }
       }
@@ -1087,6 +1106,12 @@ export default (props) => {
         })
     }
     else if (name === "createIncomeDoc") {
+      let appStateId = null
+      for (let i = 0; i < selectedDoc.attributes.length; i++) {
+        if (selectedDoc.attributes[i].name === "Application_State") {
+          appStateId = selectedDoc.attributes[i].value
+        }
+      }
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1096,8 +1121,7 @@ export default (props) => {
         userRole: userProfile.userRole,
         variables: {
           userAction: { value: "createIncomeDoc" },
-          // appStateId: { value: appStateId },
-          appStateId: { value: selectedDoc.id },
+          appStateId: { value: appStateId },
         },
       };
       console.log("createIncomeDoc:", commandJson);
@@ -1128,7 +1152,7 @@ export default (props) => {
     }
     else if (name === "saveIncomeDoc") {
       let docToSave = getFieldValuesSaveDocument();
-      // console.log("docToSave:", docToSave);      
+
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -1146,6 +1170,12 @@ export default (props) => {
       clearTabData(process_id);
     }
     else if (name === "deleteIncome") {
+      let appStateId = null
+      for (let i = 0; i < selectedDoc.attributes.length; i++) {
+        if (selectedDoc.attributes[i].name === "Application_State") {
+          appStateId = selectedDoc.attributes[i].value
+        }
+      }
       const commandJson =
       {
         commandType: "completeTask",
@@ -1156,7 +1186,7 @@ export default (props) => {
         userRole: userProfile.userRole,
         variables: {
           userAction: { value: "deleteIncome" },
-          appStateId: { value: selectedDoc.id },
+          appStateId: { value: appStateId },
           incomeId: { value: item.id }
         }
       }
@@ -1179,43 +1209,6 @@ export default (props) => {
         })
     }
     else if (name === "createTrusteePerson") {
-      let commandJson = {
-        commandType: "completeTask",
-        session_id: session_id,
-        process_id: process_id,
-        taskID: taskID,
-        userId: userProfile.userId,
-        userRole: userProfile.userRole,
-        variables: {
-          userAction: { value: "createTrusteePerson" },
-          // appStateId: { value: appStateId },
-          appStateId: { value: selectedDoc.id },
-        },
-      };
-      console.log("createTrusteePerson:", commandJson);
-      sendFieldValues(commandJson);
-      clearTabData(process_id);
-    }
-    else if (name === "saveTrusteePerson") {
-      let docToSave = getFieldValuesSaveDocument();
-      // console.log("docToSave:", docToSave);      
-      let commandJson = {
-        commandType: "completeTask",
-        session_id: session_id,
-        process_id: process_id,
-        taskID: taskID,
-        userId: userProfile.userId,
-        userRole: userProfile.userRole,
-        variables: {
-          userAction: { value: "saveTrusteePerson" },
-          document: { value: JSON.stringify(docToSave) },
-        },
-      };
-      console.log("saveTrusteePerson:", commandJson);
-      sendFieldValues(commandJson);
-      clearTabData(process_id);
-    }
-    else if (name === "calcKON") {
       let appStateId = null
       for (let i = 0; i < selectedDoc.attributes.length; i++) {
         if (selectedDoc.attributes[i].name === "Application_State") {
@@ -1230,8 +1223,58 @@ export default (props) => {
         userId: userProfile.userId,
         userRole: userProfile.userRole,
         variables: {
-          userAction: { value: "calcKON" },
+          userAction: { value: "createTrusteePerson" },
           appStateId: { value: appStateId },
+        },
+      };
+      console.log("createTrusteePerson:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "saveTrusteePerson") {
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "saveTrusteePerson" },
+        },
+      };
+      console.log("saveTrusteePerson:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "registerState") {
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "registerState" },
+          docId: { value: selectedDoc.id },
+        },
+      };
+      console.log("registerState:", commandJson);
+      sendFieldValues(commandJson);
+      clearTabData(process_id);
+    }
+    else if (name === "calcKON") {
+      let commandJson = {
+        commandType: "completeTask",
+        session_id: session_id,
+        process_id: process_id,
+        taskID: taskID,
+        userId: userProfile.userId,
+        userRole: userProfile.userRole,
+        variables: {
+          userAction: { value: "calcKON" },
+          docId: { value: selectedDoc.id },
         },
       };
       console.log("calcKON:", commandJson);
@@ -1239,14 +1282,12 @@ export default (props) => {
       clearTabData(process_id);
     }
     else if (name === "next") {
-      let application = getFieldValuesSaveDocument()
+      let selDoc = getFieldValuesSaveDocument()
       let saveApp = {
-        Application: application,
+        Application: selDoc,
         ApplicationState: null
       }
-      let selDoc = getFieldValuesSaveDocument()
-      // console.log("TEST:", selDoc)
-      selDoc.attributes.push({ name: "Application", type: "Doc", value: null })
+      selDoc.attributes.push({ name: "Application_State", type: "Doc", value: null })
       let personId = null;
       for (let i = 0; i < selDoc.attributes.length; i++) {
         if (selDoc.attributes[i].name === "Person") {
@@ -1265,23 +1306,22 @@ export default (props) => {
           userAction: { value: "next" },
           personId: { value: personId },
           regDateRef: { value: moment(fieldValue.Date).format("YYYY-MM-DD") },
-          application: { value: JSON.stringify(application) },
+          application: { value: JSON.stringify(selDoc) },
           saveApp: { value: JSON.stringify(saveApp) },
           selectedDoc: { value: JSON.stringify(selDoc) }
         },
       };
-      console.log("next:", application);
+      console.log("next:", commandJson.variables);
       sendFieldValues(commandJson);
       clearTabData(process_id);
     }
     else if (name === "saveAppStateDoc") {
       let docToSave = getFieldValuesSaveDocument();
-      // console.log("docToSave:", docToSave);
       let appState = {
         attributes: [],
       };
       for (let i = 0; i < docToSave.attributes.length; i++) {
-        if (docToSave.attributes[i].name !== "Application") {
+        if (docToSave.attributes[i].name !== "Application_State") {
           appState.attributes.push(docToSave.attributes[i])
         }
       }
@@ -1309,9 +1349,6 @@ export default (props) => {
           appStateId = selectedDoc.attributes[i].value
         }
       }
-      // if (appStateId === null) {
-      //   appStateId = selectedDoc.id
-      // }
       let commandJson = {
         commandType: "completeTask",
         session_id: session_id,
@@ -2022,21 +2059,23 @@ export default (props) => {
                     >
                       <thead size="auto" style={{ backgroundColor: crGreen }}>
                         <tr>
-                          <td
-                            rowSpan="2"
-                            key={"action"}
-                            style={{
-                              color: crSnow,
-                              padding: 7,
-                              minWidth: 70,
-                              fontSize: 14,
-                              textAlign: "center",
-                              fontFamily: "Courier",
-                              border: "0.5px solid #3a666c",
-                            }}
-                          >
-                            Действие
-                          </td>
+                          {subDocList[section2.name].buttons !== null && subDocList[section2.name].buttons !== "null" &&
+                            <td
+                              rowSpan="2"
+                              key={"action"}
+                              style={{
+                                color: crSnow,
+                                padding: 7,
+                                minWidth: 70,
+                                fontSize: 14,
+                                textAlign: "center",
+                                fontFamily: "Courier",
+                                border: "0.5px solid #3a666c",
+                              }}
+                            >
+                              Действие
+                            </td>
+                          }
                           {section2.sections.map((section3) => {
                             return (
                               <td
@@ -2083,7 +2122,7 @@ export default (props) => {
 
                               index < subDocListPages[section2.name] * 10 &&
                               <tr style={{ height: 35 }}>
-                                {subDocList[section2.name].buttons !== null &&
+                                {subDocList[section2.name].buttons !== null && subDocList[section2.name].buttons !== "null" &&
                                   subDocList[section2.name].buttons.length > 0 && (
                                     <td
                                       style={{
@@ -2091,31 +2130,27 @@ export default (props) => {
                                         textAlign: "center",
                                       }}
                                     >
-                                      {subDocList[section2.name].buttons !== "null" &&
-                                        subDocList[section2.name].buttons.map((button) => (
-                                          <Button
-                                            key={button.name}
-                                            name={button.name}
-                                            value={button.name}
-                                            onClick={() =>
-                                              buttonClick(button.name, dataItem)
-                                            }
-                                            style={{
-                                              height: 20,
-                                              fontSize: 10,
-                                              maxWidth: 36,
-                                              marginTop: 4,
-                                              marginBottom: 4,
-                                              fontWeight: "bold",
-                                              fontFamily: "Courier",
-                                              color: crSnowBlue,
-                                              backgroundColor: crSnow,
-                                              border: "1px solid #2d838d", //crSnowBlue
-                                            }}
-                                          >
-                                            {button.label}
-                                          </Button>
-                                        ))}
+                                      {subDocList[section2.name].buttons.map((button) => (
+                                        <Button
+                                          onClick={() =>
+                                            buttonClick(button.name, dataItem)
+                                          }
+                                          style={{
+                                            height: 20,
+                                            fontSize: 10,
+                                            maxWidth: 36,
+                                            marginTop: 4,
+                                            marginBottom: 4,
+                                            fontWeight: "bold",
+                                            fontFamily: "Courier",
+                                            color: crSnowBlue,
+                                            backgroundColor: crSnow,
+                                            border: "1px solid #2d838d", //crSnowBlue
+                                          }}
+                                        >
+                                          {button.label}
+                                        </Button>
+                                      ))}
                                     </td>
                                   )}
                                 {section2.sections.map((section3) => {
@@ -2223,21 +2258,23 @@ export default (props) => {
               >
                 <thead size="auto" style={{ backgroundColor: crGreen }}>
                   <tr>
-                    <td
-                      rowSpan="2"
-                      key={"action"}
-                      style={{
-                        color: crSnow,
-                        padding: 7,
-                        minWidth: 70,
-                        fontSize: 14,
-                        textAlign: "center",
-                        fontFamily: "Courier",
-                        border: "0.5px solid #3a666c",
-                      }}
-                    >
-                      Действие
-                    </td>
+                    {subDocList[section.name].buttons !== null && subDocList[section.name].buttons !== "null" &&
+                      <td
+                        rowSpan="2"
+                        key={"action"}
+                        style={{
+                          color: crSnow,
+                          padding: 7,
+                          minWidth: 70,
+                          fontSize: 14,
+                          textAlign: "center",
+                          fontFamily: "Courier",
+                          border: "0.5px solid #3a666c",
+                        }}
+                      >
+                        Действие
+                      </td>
+                    }
                     {section.sections.map((section2) => {
                       return (
                         <td
@@ -2255,7 +2292,6 @@ export default (props) => {
                       )
                     })}
                   </tr>
-                  {/*  */}
                   <tr>
                     {section.sections.map((section) =>
                       section.contents.map((contentItem) => {
@@ -2285,7 +2321,7 @@ export default (props) => {
 
                         index < subDocListPages[section.name] * 10 &&
                         <tr style={{ height: 35 }}>
-                          {subDocList[section.name].buttons !== null &&
+                          {subDocList[section.name].buttons !== "null" && subDocList[section.name].buttons !== null &&
                             subDocList[section.name].buttons.length > 0 && (
                               <td
                                 style={{
@@ -2293,31 +2329,27 @@ export default (props) => {
                                   textAlign: "center",
                                 }}
                               >
-                                {subDocList[section.name].buttons !== "null" &&
-                                  subDocList[section.name].buttons.map((button) => (
-                                    <Button
-                                      key={button.name}
-                                      name={button.name}
-                                      value={button.name}
-                                      onClick={() =>
-                                        buttonClick(button.name, dataItem)
-                                      }
-                                      style={{
-                                        height: 20,
-                                        fontSize: 10,
-                                        maxWidth: 36,
-                                        marginTop: 4,
-                                        marginBottom: 4,
-                                        fontWeight: "bold",
-                                        fontFamily: "Courier",
-                                        color: crSnowBlue,
-                                        backgroundColor: crSnow,
-                                        border: "1px solid #2d838d", //crSnowBlue
-                                      }}
-                                    >
-                                      {button.label}
-                                    </Button>
-                                  ))}
+                                {subDocList[section.name].buttons.map((button) => (
+                                  <Button
+                                    onClick={() =>
+                                      buttonClick(button.name, dataItem)
+                                    }
+                                    style={{
+                                      height: 20,
+                                      fontSize: 10,
+                                      maxWidth: 36,
+                                      marginTop: 4,
+                                      marginBottom: 4,
+                                      fontWeight: "bold",
+                                      fontFamily: "Courier",
+                                      color: crSnowBlue,
+                                      backgroundColor: crSnow,
+                                      border: "1px solid #2d838d", //crSnowBlue
+                                    }}
+                                  >
+                                    {button.label}
+                                  </Button>
+                                ))}
                               </td>
                             )}
                           {section.sections.map((section2) => {
@@ -2522,14 +2554,14 @@ export default (props) => {
       value = getSubDocFieldValue(section.name, cItem.name)
     }
     else {
-      if (level === 1 && cItem.edit === true) {
+      if (cItem.edit === true) { // level === 1 && 
         value = fieldValue[cItem.name]
       }
       else {
         for (let i = 0; i < selectedDoc.attributes.length; i++) {
           if (cItem.name === selectedDoc.attributes[i].name) {
             value = selectedDoc.attributes[i].value
-            console.log("VAL", selectedDoc.attributes[i].value)
+            // console.log("VAL", selectedDoc.attributes[i].value)
           }
         }
       }
@@ -2542,6 +2574,7 @@ export default (props) => {
     else if (cItem.type === "Bool") {
       if (value === false || value === null || value === undefined || value === "False") {
         value = false
+        // console.log("BOOL VAL", cItem.name, value)
       }
       else {
         value = true
@@ -2563,7 +2596,7 @@ export default (props) => {
   function getSubDocFieldValue(subDocName, contentItemName) {
     try {
       for (let i = 0; i < subDocuments[subDocName].attributes.length; i++) {
-        // console.log("hhhh:", subDocuments[subDocName].attributes.length)
+        // console.log("getSubDocFieldValue:", subDocuments[subDocName].attributes.length)
         if (subDocuments[subDocName].attributes[i].name === contentItemName) {
           return subDocuments[subDocName].attributes[i].value
         }

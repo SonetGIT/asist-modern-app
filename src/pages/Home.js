@@ -428,7 +428,7 @@ export default () => {
           text: incomingJson.text,
           icon: incomingJson.icon,
         });
-      } 
+      }
       else if (incomingJson.messageType === "toast") {
         if (incomingJson.toastType === "success") {
           callSuccessToast(incomingJson.toastText, 3000)
@@ -458,7 +458,7 @@ export default () => {
       }
     };
   }
-  function callSuccessToast(text, time){
+  function callSuccessToast(text, time) {
     toast(text, {
       position: "top-right",
       autoClose: time,
@@ -469,7 +469,7 @@ export default () => {
       progress: undefined,
     });
   }
-  function callErrorToast(text, time){
+  function callErrorToast(text, time) {
     toast.error(text, {
       position: "top-right",
       autoClose: 6000,
@@ -502,8 +502,8 @@ export default () => {
             profile.attributes[i][0] === "true"
               ? true
               : profile.attributes[i][0] === "false"
-              ? false
-              : profile.attributes[i][0];
+                ? false
+                : profile.attributes[i][0];
           curUserProfile[i] = value;
         }
         setUserProfile(curUserProfile);
@@ -720,7 +720,7 @@ export default () => {
               button
               key={index}
               className={classesnav.level1}
-              // onClick={() => handleOpenMenuClick(level1.name)}
+            // onClick={() => handleOpenMenuClick(level1.name)}
             >
               <MdLibraryAdd
                 className={classesnav.addToIconStl}
@@ -948,7 +948,7 @@ export default () => {
                             {getRole(userProfile.userRole)}
                           </td>
                         </tr>
-                        <td align="right" > 
+                        <td align="right" >
                           Esc{" "}
                           <IoCloseCircle
                             style={{
@@ -958,7 +958,7 @@ export default () => {
                             onClick={() => keycloak.logout()}
                             align="right"
                           />
-                          </td>
+                        </td>
                       </tbody>
                     </table>
                   </td>
